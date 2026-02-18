@@ -8,9 +8,6 @@ classifiers = [
     "Framework :: Pytest",
     "Intended Audience :: Developers",
     "Programming Language :: Python :: 3 :: Only",
-    "Programming Language :: Python :: 3.10",
-    "Programming Language :: Python :: 3.11",
-    "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
     "Topic :: Software Development :: Testing",
     "Topic :: Utilities",
@@ -31,7 +28,7 @@ dependencies = [
 ]
 
 [project.urls]
-"Source Code" = "https://github.com/pytest-loco/pytest-loco"
+"Source" = "https://github.com/pytest-loco/pytest-loco"
 "Issues" = "https://github.com/pytest-loco/pytest-loco/issues"
 
 [project.entry-points.pytest11]
