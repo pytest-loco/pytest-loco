@@ -1,0 +1,30 @@
+{
+    "editor.defaultFormatter": "charliermarsh.ruff",
+    "mypy-type-checker.args": [
+        "--config-file=${workspaceFolder}/pyproject.toml"
+    ],
+    "mypy-type-checker.importStrategy": "fromEnvironment",
+    "mypy-type-checker.preferDaemon": false,
+    "ruff.configurationPreference": "filesystemFirst",
+    "ruff.lint.enable": true,
+    "yaml.customTags": [
+        "!base64 scalar",
+        "!binaryFile scalar",
+        "!binaryHex scalar",
+        "!date scalar",
+        "!datetime scalar",
+        "!dump mapping",
+        "!duration scalar",
+        "!load mapping",
+        "!secret scalar",
+        "!textFile scalar",
+        "!timedelta scalar",
+        "!var scalar"
+    ],
+    "yaml.schemas": {
+        ".vscode/loco.schema.json": [
+            "test_*.yaml",
+            "test_*.yml"
+        ]
+    }
+}

@@ -1,0 +1,1719 @@
+{
+    "$defs": {
+        "ActionExports": {
+            "description": "Mapping of variable names to values derived from the action result. Exported variables are merged into the execution context and become available to subsequent steps.",
+            "patternProperties": {
+                "^[a-zA-Z][\\w]*$": {
+                    "$ref": "#/$defs/Deferred_Scalar_"
+                }
+            },
+            "propertyNames": {
+                "description": "Name of a variable used to store or reference values within a scenario execution context. Variable identifiers must start with a letter and may contain letters, digits, or underscores. Names are restricted to ASCII characters.",
+                "examples": [
+                    "userId",
+                    "api_token",
+                    "result"
+                ]
+            },
+            "title": "Exported variables",
+            "type": "object",
+            "x-ref": "ActionExports"
+        },
+        "ActionOutput": {
+            "default": "result",
+            "description": "Name of the variable under which the action result context will be stored. The stored value may later be referenced or selectively exported into the execution context.",
+            "examples": [
+                "userId",
+                "api_token",
+                "result"
+            ],
+            "pattern": "^[a-zA-Z][\\w]*$",
+            "title": "Result variable",
+            "type": "string",
+            "x-ref": "ActionOutput"
+        },
+        "Case": {
+            "additionalProperties": false,
+            "description": "Executable test case definition.\n\nRepresents a concrete, executable test case in the DSL.\nA case defines its execution context, environment requirements,\noptional parameters, and metadata used for reporting and integration.\n\nA case is the primary unit of execution. It may be executed directly\nor expanded and orchestrated by higher-level processors.",
+            "properties": {
+                "description": {
+                    "$ref": "#/$defs/DescribedModelDescription"
+                },
+                "envs": {
+                    "$ref": "#/$defs/EnvironmentDefinition",
+                    "description": "Definition of environment-based inputs required by the template. Describes external configuration values, such as environment variables or secrets, that must be provided at execution time.",
+                    "title": "Environment definition"
+                },
+                "metadata": {
+                    "description": "Additional metadata associated with the test case. Used by reporting tools, plugins, or external integrations to attach labels, tags, or other auxiliary information.",
+                    "patternProperties": {
+                        "^[a-zA-Z][\\w]*$": {
+                            "$ref": "#/$defs/Value"
+                        }
+                    },
+                    "propertyNames": {
+                        "description": "Name of a variable used to store or reference values within a scenario execution context. Variable identifiers must start with a letter and may contain letters, digits, or underscores. Names are restricted to ASCII characters.",
+                        "examples": [
+                            "userId",
+                            "api_token",
+                            "result"
+                        ]
+                    },
+                    "title": "Case metadata",
+                    "type": "object"
+                },
+                "params": {
+                    "description": "Definition of parameters used to drive data-driven execution of the test case. Parameters define the input space and control combinatorial execution of the case.",
+                    "items": {
+                        "$ref": "#/$defs/Parameter"
+                    },
+                    "title": "Case parameters",
+                    "type": "array"
+                },
+                "spec": {
+                    "const": "case",
+                    "title": "Spec",
+                    "type": "string"
+                },
+                "title": {
+                    "$ref": "#/$defs/DescribedModelTitle"
+                },
+                "vars": {
+                    "$ref": "#/$defs/ContextVariables",
+                    "title": "Vars"
+                }
+            },
+            "required": [
+                "spec"
+            ],
+            "title": "Case",
+            "type": "object"
+        },
+        "Check": {
+            "anyOf": [
+                {
+                    "$ref": "#/$defs/match_Check"
+                },
+                {
+                    "$ref": "#/$defs/not_match_Check"
+                },
+                {
+                    "$ref": "#/$defs/less_than_Check"
+                },
+                {
+                    "$ref": "#/$defs/less_than_or_equal_Check"
+                },
+                {
+                    "$ref": "#/$defs/greater_than_Check"
+                },
+                {
+                    "$ref": "#/$defs/greater_than_or_equal_Check"
+                },
+                {
+                    "$ref": "#/$defs/regex_Check"
+                }
+            ],
+            "title": "Check"
+        },
+        "CheckTargetValue": {
+            "$ref": "#/$defs/Deferred_Value_",
+            "description": "Value to be validated by the check. The value is resolved against the execution context before the check is executed.",
+            "title": "Target value",
+            "x-ref": "CheckTargetValue"
+        },
+        "ContextVariables": {
+            "description": "Local context variables provided to block. These variables are added to the execution context and can be referenced by subsequent steps.",
+            "patternProperties": {
+                "^[a-zA-Z][\\w]*$": {
+                    "$ref": "#/$defs/Deferred_Value_"
+                }
+            },
+            "propertyNames": {
+                "description": "Name of a variable used to store or reference values within a scenario execution context. Variable identifiers must start with a letter and may contain letters, digits, or underscores. Names are restricted to ASCII characters.",
+                "examples": [
+                    "userId",
+                    "api_token",
+                    "result"
+                ]
+            },
+            "title": "Local context",
+            "type": "object",
+            "x-ref": "ContextVariables"
+        },
+        "Deferred": {
+            "anyOf": [
+                {},
+                {
+                    "$ref": "#/$defs/DeferredCallable_TypeVar_"
+                },
+                {
+                    "items": {
+                        "$ref": "#/$defs/Deferred_TypeVar_"
+                    },
+                    "type": "array"
+                },
+                {
+                    "additionalProperties": {
+                        "$ref": "#/$defs/Deferred_TypeVar_"
+                    },
+                    "type": "object"
+                }
+            ]
+        },
+        "DeferredCallable_Scalar_": {
+            "description": "Runtime value"
+        },
+        "DeferredCallable_TypeVar_": {
+            "description": "Runtime value"
+        },
+        "DeferredCallable_Value_": {
+            "description": "Runtime value"
+        },
+        "Deferred_Scalar_": {
+            "anyOf": [
+                {
+                    "$ref": "#/$defs/Scalar"
+                },
+                {
+                    "$ref": "#/$defs/DeferredCallable_Scalar_"
+                },
+                {
+                    "items": {
+                        "$ref": "#/$defs/Deferred_Scalar_"
+                    },
+                    "type": "array"
+                },
+                {
+                    "additionalProperties": {
+                        "$ref": "#/$defs/Deferred_Scalar_"
+                    },
+                    "type": "object"
+                }
+            ]
+        },
+        "Deferred_TypeVar_": {
+            "anyOf": [
+                {},
+                {
+                    "$ref": "#/$defs/DeferredCallable_TypeVar_"
+                },
+                {
+                    "items": {
+                        "$ref": "#/$defs/Deferred_TypeVar_"
+                    },
+                    "type": "array"
+                },
+                {
+                    "additionalProperties": {
+                        "$ref": "#/$defs/Deferred_TypeVar_"
+                    },
+                    "type": "object"
+                }
+            ]
+        },
+        "Deferred_Value_": {
+            "anyOf": [
+                {
+                    "$ref": "#/$defs/Value"
+                },
+                {
+                    "$ref": "#/$defs/DeferredCallable_Value_"
+                },
+                {
+                    "items": {
+                        "$ref": "#/$defs/Deferred_Value_"
+                    },
+                    "type": "array"
+                },
+                {
+                    "additionalProperties": {
+                        "$ref": "#/$defs/Deferred_Value_"
+                    },
+                    "type": "object"
+                }
+            ]
+        },
+        "DescribedModelDescription": {
+            "default": null,
+            "description": "Detailed human-readable description of the DSL element. May span multiple lines and is intended for documentation and reporting purposes.",
+            "title": "Description",
+            "type": [
+                "string",
+                "null"
+            ],
+            "x-ref": "DescribedModelDescription"
+        },
+        "DescribedModelTitle": {
+            "default": null,
+            "description": "Short human-readable title of the DSL element. Typically used in reports, logs, or user interfaces.",
+            "title": "Title",
+            "type": [
+                "string",
+                "null"
+            ],
+            "x-ref": "DescribedModelTitle"
+        },
+        "EnvironmentDefinition": {
+            "description": "Definition of environment-based input parameters.\n\nRepresents inputs expected to be resolved from environment variables\nor other external configuration sources.",
+            "items": {
+                "$ref": "#/$defs/InputDefinition"
+            },
+            "minItems": 1,
+            "title": "EnvironmentDefinition",
+            "type": "array"
+        },
+        "InputDefaultValue": {
+            "$ref": "#/$defs/Value",
+            "default": null,
+            "description": "Default value of the input parameter. Used when the input is not explicitly provided. Must not be specified for required inputs.",
+            "title": "Default value",
+            "x-ref": "InputDefaultValue"
+        },
+        "InputDefinition": {
+            "additionalProperties": false,
+            "description": "Definition of a single input parameter.\n\nDescribes a named input that can be provided by a user, environment,\nor calling scenario. An input may be required or optional, may define\na default value, and can be marked as secret to prevent accidental\nexposure in logs, reports, or error messages.",
+            "properties": {
+                "default": {
+                    "$ref": "#/$defs/InputDefaultValue"
+                },
+                "description": {
+                    "$ref": "#/$defs/InputDescription",
+                    "title": "Description"
+                },
+                "name": {
+                    "$ref": "#/$defs/InputName",
+                    "title": "Name"
+                },
+                "required": {
+                    "$ref": "#/$defs/InputRequiredFlag",
+                    "title": "Required"
+                },
+                "secret": {
+                    "$ref": "#/$defs/InputSecretFlag",
+                    "title": "Secret"
+                },
+                "type": {
+                    "$ref": "#/$defs/InputType",
+                    "title": "Type"
+                }
+            },
+            "required": [
+                "name"
+            ],
+            "title": "InputDefinition",
+            "type": "object"
+        },
+        "InputDescription": {
+            "default": null,
+            "description": "Human-readable description of the input parameter. Used for documentation, reports, and user interfaces.",
+            "title": "Input description",
+            "type": [
+                "string",
+                "null"
+            ],
+            "x-ref": "InputDescription"
+        },
+        "InputName": {
+            "description": "Unique identifier of the input parameter. Used to reference the input value in expressions, templates, and variable lookups. Must start with a letter and contain only letters, digits, and underscores.",
+            "pattern": "^(?P<name>[a-zA-Z][\\w]*)$",
+            "title": "Input name",
+            "type": "string",
+            "x-ref": "InputName"
+        },
+        "InputRequiredFlag": {
+            "default": false,
+            "description": "Indicates whether the input parameter must be explicitly provided by the user or calling scenario. Required inputs must not define a default value.",
+            "title": "Required flag",
+            "type": "boolean",
+            "x-ref": "InputRequiredFlag"
+        },
+        "InputSecretFlag": {
+            "default": false,
+            "description": "Marks the input parameter as sensitive. Secret inputs are masked in logs, reports, and error messages.",
+            "title": "Secret flag",
+            "type": "boolean",
+            "x-ref": "InputSecretFlag"
+        },
+        "InputType": {
+            "default": "string",
+            "description": "Scalar data type of the input parameter. Supported types are: string, integer, float, and bool.",
+            "enum": [
+                "string",
+                "integer",
+                "float",
+                "bool",
+                "object",
+                "list"
+            ],
+            "title": "Input type",
+            "type": "string",
+            "x-ref": "InputType"
+        },
+        "Parameter": {
+            "additionalProperties": false,
+            "description": "Parameter definition for data-driven execution.\n\nDescribes a single named parameter and its possible values.\nParameters are used to drive combinatorial execution of scenarios\nor templates by providing multiple input values.\n\nEach value represents either a concrete value.",
+            "properties": {
+                "description": {
+                    "$ref": "#/$defs/DescribedModelDescription"
+                },
+                "name": {
+                    "$ref": "#/$defs/ParameterName",
+                    "title": "Name"
+                },
+                "title": {
+                    "$ref": "#/$defs/DescribedModelTitle"
+                },
+                "values": {
+                    "description": "List of possible values for the parameter.",
+                    "items": {
+                        "$ref": "#/$defs/Value"
+                    },
+                    "minItems": 1,
+                    "title": "Parameter values",
+                    "type": "array"
+                }
+            },
+            "required": [
+                "name"
+            ],
+            "title": "Parameter",
+            "type": "object"
+        },
+        "ParameterName": {
+            "description": "Identifier of the parameter. The name is used to reference the parameter value in expressions, templates, and step definitions.",
+            "pattern": "^(?P<name>[a-zA-Z][\\w]*)$",
+            "title": "Parameter name",
+            "type": "string",
+            "x-ref": "ParameterName"
+        },
+        "ParametersDefinition": {
+            "description": "Definition of scenario parameters.\n\nRepresents inputs expected to be provided explicitly when invoking\na scenario or reusable template.",
+            "items": {
+                "$ref": "#/$defs/InputDefinition"
+            },
+            "minItems": 1,
+            "title": "ParametersDefinition",
+            "type": "array"
+        },
+        "Scalar": {
+            "anyOf": [
+                {
+                    "format": "date",
+                    "type": "string"
+                },
+                {
+                    "format": "date-time",
+                    "type": "string"
+                },
+                {
+                    "format": "duration",
+                    "type": "string"
+                },
+                {
+                    "type": "string"
+                },
+                {
+                    "format": "binary",
+                    "type": "string"
+                },
+                {
+                    "type": "integer"
+                },
+                {
+                    "type": "number"
+                },
+                {
+                    "type": "boolean"
+                },
+                {
+                    "format": "password",
+                    "type": "string",
+                    "writeOnly": true
+                }
+            ]
+        },
+        "Step": {
+            "anyOf": [
+                {
+                    "$ref": "#/$defs/pytest_loco__core__builder__ModelMetaclass__1"
+                },
+                {
+                    "$ref": "#/$defs/pytest_loco__core__builder__ModelMetaclass__2"
+                }
+            ],
+            "title": "Step"
+        },
+        "Template": {
+            "additionalProperties": false,
+            "description": "Reusable template definition.\n\nRepresents a reusable, non-executable building block of the DSL.\nA template defines shared context variables, environment requirements,\nand parameter schema that can be reused by executable scenarios.\n\nTemplates are not executed directly. Instead, they are invoked or\ninstantiated by other DSL constructs, contributing validated context,\nparameters, and environment data to the execution flow.",
+            "properties": {
+                "description": {
+                    "$ref": "#/$defs/DescribedModelDescription"
+                },
+                "envs": {
+                    "$ref": "#/$defs/EnvironmentDefinition",
+                    "description": "Definition of environment-based inputs required by the template. Describes external configuration values, such as environment variables or secrets, that must be provided at execution time.",
+                    "title": "Environment definition"
+                },
+                "params": {
+                    "$ref": "#/$defs/ParametersDefinition",
+                    "description": "Definition of parameters that must or may be provided when the template is invoked. Parameters define the input contract of the template and control its data-driven behavior.",
+                    "title": "Parameters definition"
+                },
+                "spec": {
+                    "const": "template",
+                    "title": "Spec",
+                    "type": "string"
+                },
+                "title": {
+                    "$ref": "#/$defs/DescribedModelTitle"
+                },
+                "vars": {
+                    "$ref": "#/$defs/ContextVariables",
+                    "title": "Vars"
+                }
+            },
+            "required": [
+                "spec"
+            ],
+            "title": "Template",
+            "type": "object"
+        },
+        "Value": {
+            "anyOf": [
+                {
+                    "$ref": "#/$defs/Scalar"
+                },
+                {
+                    "items": {
+                        "$ref": "#/$defs/Value"
+                    },
+                    "type": "array"
+                },
+                {
+                    "additionalProperties": {
+                        "$ref": "#/$defs/Value"
+                    },
+                    "type": "object"
+                },
+                {
+                    "type": "null"
+                }
+            ]
+        },
+        "greater_than_Check": {
+            "additionalProperties": false,
+            "oneOf": [
+                {
+                    "not": {
+                        "anyOf": [
+                            {
+                                "required": [
+                                    "greater_than"
+                                ]
+                            },
+                            {
+                                "required": [
+                                    "gt"
+                                ]
+                            }
+                        ]
+                    },
+                    "required": [
+                        "greaterThan"
+                    ]
+                },
+                {
+                    "not": {
+                        "anyOf": [
+                            {
+                                "required": [
+                                    "greaterThan"
+                                ]
+                            },
+                            {
+                                "required": [
+                                    "gt"
+                                ]
+                            }
+                        ]
+                    },
+                    "required": [
+                        "greater_than"
+                    ]
+                },
+                {
+                    "not": {
+                        "anyOf": [
+                            {
+                                "required": [
+                                    "greaterThan"
+                                ]
+                            },
+                            {
+                                "required": [
+                                    "greater_than"
+                                ]
+                            }
+                        ]
+                    },
+                    "required": [
+                        "gt"
+                    ]
+                }
+            ],
+            "properties": {
+                "description": {
+                    "$ref": "#/$defs/DescribedModelDescription"
+                },
+                "greaterThan": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/Deferred"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "description": "Actual value must be greater than this value.",
+                    "title": "Lower bound",
+                    "x-aliases": [
+                        "greater_than",
+                        "gt",
+                        "greaterThan"
+                    ]
+                },
+                "greater_than": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/Deferred"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "description": "Actual value must be greater than this value.",
+                    "title": "Lower bound",
+                    "x-aliases": [
+                        "greater_than",
+                        "gt",
+                        "greaterThan"
+                    ]
+                },
+                "gt": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/Deferred"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "description": "Actual value must be greater than this value.",
+                    "title": "Lower bound",
+                    "x-aliases": [
+                        "greater_than",
+                        "gt",
+                        "greaterThan"
+                    ]
+                },
+                "title": {
+                    "$ref": "#/$defs/DescribedModelTitle"
+                },
+                "value": {
+                    "$ref": "#/$defs/CheckTargetValue"
+                }
+            },
+            "required": [
+                "value"
+            ],
+            "title": "greater_than_Check",
+            "type": "object"
+        },
+        "greater_than_or_equal_Check": {
+            "additionalProperties": false,
+            "oneOf": [
+                {
+                    "not": {
+                        "anyOf": [
+                            {
+                                "required": [
+                                    "greater_than_or_equal"
+                                ]
+                            },
+                            {
+                                "required": [
+                                    "gte"
+                                ]
+                            }
+                        ]
+                    },
+                    "required": [
+                        "greaterThanOrEqual"
+                    ]
+                },
+                {
+                    "not": {
+                        "anyOf": [
+                            {
+                                "required": [
+                                    "greaterThanOrEqual"
+                                ]
+                            },
+                            {
+                                "required": [
+                                    "gte"
+                                ]
+                            }
+                        ]
+                    },
+                    "required": [
+                        "greater_than_or_equal"
+                    ]
+                },
+                {
+                    "not": {
+                        "anyOf": [
+                            {
+                                "required": [
+                                    "greaterThanOrEqual"
+                                ]
+                            },
+                            {
+                                "required": [
+                                    "greater_than_or_equal"
+                                ]
+                            }
+                        ]
+                    },
+                    "required": [
+                        "gte"
+                    ]
+                }
+            ],
+            "properties": {
+                "description": {
+                    "$ref": "#/$defs/DescribedModelDescription"
+                },
+                "greaterThanOrEqual": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/Deferred"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "description": "Actual value must be greater than or equal to this value.",
+                    "title": "Lower bound (inclusive)",
+                    "x-aliases": [
+                        "greater_than_or_equal",
+                        "gte",
+                        "greaterThanOrEqual"
+                    ]
+                },
+                "greater_than_or_equal": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/Deferred"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "description": "Actual value must be greater than or equal to this value.",
+                    "title": "Lower bound (inclusive)",
+                    "x-aliases": [
+                        "greater_than_or_equal",
+                        "gte",
+                        "greaterThanOrEqual"
+                    ]
+                },
+                "gte": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/Deferred"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "description": "Actual value must be greater than or equal to this value.",
+                    "title": "Lower bound (inclusive)",
+                    "x-aliases": [
+                        "greater_than_or_equal",
+                        "gte",
+                        "greaterThanOrEqual"
+                    ]
+                },
+                "title": {
+                    "$ref": "#/$defs/DescribedModelTitle"
+                },
+                "value": {
+                    "$ref": "#/$defs/CheckTargetValue"
+                }
+            },
+            "required": [
+                "value"
+            ],
+            "title": "greater_than_or_equal_Check",
+            "type": "object"
+        },
+        "less_than_Check": {
+            "additionalProperties": false,
+            "oneOf": [
+                {
+                    "not": {
+                        "anyOf": [
+                            {
+                                "required": [
+                                    "less_than"
+                                ]
+                            },
+                            {
+                                "required": [
+                                    "lt"
+                                ]
+                            }
+                        ]
+                    },
+                    "required": [
+                        "lessThan"
+                    ]
+                },
+                {
+                    "not": {
+                        "anyOf": [
+                            {
+                                "required": [
+                                    "lessThan"
+                                ]
+                            },
+                            {
+                                "required": [
+                                    "lt"
+                                ]
+                            }
+                        ]
+                    },
+                    "required": [
+                        "less_than"
+                    ]
+                },
+                {
+                    "not": {
+                        "anyOf": [
+                            {
+                                "required": [
+                                    "lessThan"
+                                ]
+                            },
+                            {
+                                "required": [
+                                    "less_than"
+                                ]
+                            }
+                        ]
+                    },
+                    "required": [
+                        "lt"
+                    ]
+                }
+            ],
+            "properties": {
+                "description": {
+                    "$ref": "#/$defs/DescribedModelDescription"
+                },
+                "lessThan": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/Deferred"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "description": "Actual value must be less than this value.",
+                    "title": "Upper bound",
+                    "x-aliases": [
+                        "less_than",
+                        "lt",
+                        "lessThan"
+                    ]
+                },
+                "less_than": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/Deferred"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "description": "Actual value must be less than this value.",
+                    "title": "Upper bound",
+                    "x-aliases": [
+                        "less_than",
+                        "lt",
+                        "lessThan"
+                    ]
+                },
+                "lt": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/Deferred"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "description": "Actual value must be less than this value.",
+                    "title": "Upper bound",
+                    "x-aliases": [
+                        "less_than",
+                        "lt",
+                        "lessThan"
+                    ]
+                },
+                "title": {
+                    "$ref": "#/$defs/DescribedModelTitle"
+                },
+                "value": {
+                    "$ref": "#/$defs/CheckTargetValue"
+                }
+            },
+            "required": [
+                "value"
+            ],
+            "title": "less_than_Check",
+            "type": "object"
+        },
+        "less_than_or_equal_Check": {
+            "additionalProperties": false,
+            "oneOf": [
+                {
+                    "not": {
+                        "anyOf": [
+                            {
+                                "required": [
+                                    "less_than_or_equal"
+                                ]
+                            },
+                            {
+                                "required": [
+                                    "lte"
+                                ]
+                            }
+                        ]
+                    },
+                    "required": [
+                        "lessThanOrEqual"
+                    ]
+                },
+                {
+                    "not": {
+                        "anyOf": [
+                            {
+                                "required": [
+                                    "lessThanOrEqual"
+                                ]
+                            },
+                            {
+                                "required": [
+                                    "lte"
+                                ]
+                            }
+                        ]
+                    },
+                    "required": [
+                        "less_than_or_equal"
+                    ]
+                },
+                {
+                    "not": {
+                        "anyOf": [
+                            {
+                                "required": [
+                                    "lessThanOrEqual"
+                                ]
+                            },
+                            {
+                                "required": [
+                                    "less_than_or_equal"
+                                ]
+                            }
+                        ]
+                    },
+                    "required": [
+                        "lte"
+                    ]
+                }
+            ],
+            "properties": {
+                "description": {
+                    "$ref": "#/$defs/DescribedModelDescription"
+                },
+                "lessThanOrEqual": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/Deferred"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "description": "Actual value must be less than or equal to this value.",
+                    "title": "Upper bound (inclusive)",
+                    "x-aliases": [
+                        "less_than_or_equal",
+                        "lte",
+                        "lessThanOrEqual"
+                    ]
+                },
+                "less_than_or_equal": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/Deferred"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "description": "Actual value must be less than or equal to this value.",
+                    "title": "Upper bound (inclusive)",
+                    "x-aliases": [
+                        "less_than_or_equal",
+                        "lte",
+                        "lessThanOrEqual"
+                    ]
+                },
+                "lte": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/Deferred"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "description": "Actual value must be less than or equal to this value.",
+                    "title": "Upper bound (inclusive)",
+                    "x-aliases": [
+                        "less_than_or_equal",
+                        "lte",
+                        "lessThanOrEqual"
+                    ]
+                },
+                "title": {
+                    "$ref": "#/$defs/DescribedModelTitle"
+                },
+                "value": {
+                    "$ref": "#/$defs/CheckTargetValue"
+                }
+            },
+            "required": [
+                "value"
+            ],
+            "title": "less_than_or_equal_Check",
+            "type": "object"
+        },
+        "match_Check": {
+            "additionalProperties": false,
+            "oneOf": [
+                {
+                    "not": {
+                        "anyOf": [
+                            {
+                                "required": [
+                                    "equal"
+                                ]
+                            },
+                            {
+                                "required": [
+                                    "match"
+                                ]
+                            }
+                        ]
+                    },
+                    "required": [
+                        "eq"
+                    ]
+                },
+                {
+                    "not": {
+                        "anyOf": [
+                            {
+                                "required": [
+                                    "eq"
+                                ]
+                            },
+                            {
+                                "required": [
+                                    "match"
+                                ]
+                            }
+                        ]
+                    },
+                    "required": [
+                        "equal"
+                    ]
+                },
+                {
+                    "not": {
+                        "anyOf": [
+                            {
+                                "required": [
+                                    "eq"
+                                ]
+                            },
+                            {
+                                "required": [
+                                    "equal"
+                                ]
+                            }
+                        ]
+                    },
+                    "required": [
+                        "match"
+                    ]
+                }
+            ],
+            "properties": {
+                "description": {
+                    "$ref": "#/$defs/DescribedModelDescription"
+                },
+                "eq": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/Deferred"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "description": "Value that must match the actual result.",
+                    "title": "Expected value",
+                    "x-aliases": [
+                        "match",
+                        "eq",
+                        "equal"
+                    ]
+                },
+                "equal": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/Deferred"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "description": "Value that must match the actual result.",
+                    "title": "Expected value",
+                    "x-aliases": [
+                        "match",
+                        "eq",
+                        "equal"
+                    ]
+                },
+                "match": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/Deferred"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "description": "Value that must match the actual result.",
+                    "title": "Expected value",
+                    "x-aliases": [
+                        "match",
+                        "eq",
+                        "equal"
+                    ]
+                },
+                "partialMatch": {
+                    "anyOf": [
+                        {
+                            "type": "boolean"
+                        },
+                        {
+                            "$ref": "#/$defs/Deferred"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "default": false,
+                    "description": "If true, performs recursive partial matching instead of strict equality comparison.",
+                    "title": "Partial comparison mode",
+                    "x-aliases": [
+                        "partial_match",
+                        "partialMatch"
+                    ]
+                },
+                "partial_match": {
+                    "anyOf": [
+                        {
+                            "type": "boolean"
+                        },
+                        {
+                            "$ref": "#/$defs/Deferred"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "default": false,
+                    "description": "If true, performs recursive partial matching instead of strict equality comparison.",
+                    "title": "Partial comparison mode",
+                    "x-aliases": [
+                        "partial_match",
+                        "partialMatch"
+                    ]
+                },
+                "title": {
+                    "$ref": "#/$defs/DescribedModelTitle"
+                },
+                "value": {
+                    "$ref": "#/$defs/CheckTargetValue"
+                }
+            },
+            "required": [
+                "value"
+            ],
+            "title": "match_Check",
+            "type": "object"
+        },
+        "not_match_Check": {
+            "additionalProperties": false,
+            "oneOf": [
+                {
+                    "not": {
+                        "anyOf": [
+                            {
+                                "required": [
+                                    "notEqual"
+                                ]
+                            },
+                            {
+                                "required": [
+                                    "notMatch"
+                                ]
+                            },
+                            {
+                                "required": [
+                                    "not_match"
+                                ]
+                            }
+                        ]
+                    },
+                    "required": [
+                        "ne"
+                    ]
+                },
+                {
+                    "not": {
+                        "anyOf": [
+                            {
+                                "required": [
+                                    "ne"
+                                ]
+                            },
+                            {
+                                "required": [
+                                    "notMatch"
+                                ]
+                            },
+                            {
+                                "required": [
+                                    "not_match"
+                                ]
+                            }
+                        ]
+                    },
+                    "required": [
+                        "notEqual"
+                    ]
+                },
+                {
+                    "not": {
+                        "anyOf": [
+                            {
+                                "required": [
+                                    "ne"
+                                ]
+                            },
+                            {
+                                "required": [
+                                    "notEqual"
+                                ]
+                            },
+                            {
+                                "required": [
+                                    "not_match"
+                                ]
+                            }
+                        ]
+                    },
+                    "required": [
+                        "notMatch"
+                    ]
+                },
+                {
+                    "not": {
+                        "anyOf": [
+                            {
+                                "required": [
+                                    "ne"
+                                ]
+                            },
+                            {
+                                "required": [
+                                    "notEqual"
+                                ]
+                            },
+                            {
+                                "required": [
+                                    "notMatch"
+                                ]
+                            }
+                        ]
+                    },
+                    "required": [
+                        "not_match"
+                    ]
+                }
+            ],
+            "properties": {
+                "description": {
+                    "$ref": "#/$defs/DescribedModelDescription"
+                },
+                "ne": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/Deferred"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "description": "Value that must not match the actual result.",
+                    "title": "Forbidden value",
+                    "x-aliases": [
+                        "not_match",
+                        "notMatch",
+                        "ne",
+                        "notEqual"
+                    ]
+                },
+                "notEqual": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/Deferred"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "description": "Value that must not match the actual result.",
+                    "title": "Forbidden value",
+                    "x-aliases": [
+                        "not_match",
+                        "notMatch",
+                        "ne",
+                        "notEqual"
+                    ]
+                },
+                "notMatch": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/Deferred"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "description": "Value that must not match the actual result.",
+                    "title": "Forbidden value",
+                    "x-aliases": [
+                        "not_match",
+                        "notMatch",
+                        "ne",
+                        "notEqual"
+                    ]
+                },
+                "not_match": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/Deferred"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "description": "Value that must not match the actual result.",
+                    "title": "Forbidden value",
+                    "x-aliases": [
+                        "not_match",
+                        "notMatch",
+                        "ne",
+                        "notEqual"
+                    ]
+                },
+                "partialMatch": {
+                    "anyOf": [
+                        {
+                            "type": "boolean"
+                        },
+                        {
+                            "$ref": "#/$defs/Deferred"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "default": false,
+                    "description": "If true, performs recursive partial matching instead of strict equality comparison.",
+                    "title": "Partial comparison mode",
+                    "x-aliases": [
+                        "partial_match",
+                        "partialMatch"
+                    ]
+                },
+                "partial_match": {
+                    "anyOf": [
+                        {
+                            "type": "boolean"
+                        },
+                        {
+                            "$ref": "#/$defs/Deferred"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "default": false,
+                    "description": "If true, performs recursive partial matching instead of strict equality comparison.",
+                    "title": "Partial comparison mode",
+                    "x-aliases": [
+                        "partial_match",
+                        "partialMatch"
+                    ]
+                },
+                "title": {
+                    "$ref": "#/$defs/DescribedModelTitle"
+                },
+                "value": {
+                    "$ref": "#/$defs/CheckTargetValue"
+                }
+            },
+            "required": [
+                "value"
+            ],
+            "title": "not_match_Check",
+            "type": "object"
+        },
+        "pytest_loco__core__builder__ModelMetaclass__1": {
+            "additionalProperties": false,
+            "properties": {
+                "action": {
+                    "const": "include",
+                    "default": "include",
+                    "title": "Action",
+                    "type": "string"
+                },
+                "description": {
+                    "$ref": "#/$defs/DescribedModelDescription"
+                },
+                "expect": {
+                    "description": "List of checks that must pass after the action execution. Each check validates some aspect of the action result or side effects. All expectations are evaluated to determine the success or failure of the step.",
+                    "items": {
+                        "$ref": "#/$defs/Check"
+                    },
+                    "title": "Action expectations",
+                    "type": "array"
+                },
+                "export": {
+                    "$ref": "#/$defs/ActionExports",
+                    "title": "Export"
+                },
+                "file": {
+                    "description": "Path to a DSL template file to include. The file must exist, be readable, and contain a valid DSL template definition. The template will be parsed and executed at runtime.",
+                    "format": "file-path",
+                    "title": "Template file path",
+                    "type": "string"
+                },
+                "output": {
+                    "$ref": "#/$defs/ActionOutput",
+                    "title": "Output"
+                },
+                "spec": {
+                    "const": "step",
+                    "default": "step",
+                    "title": "Spec",
+                    "type": "string"
+                },
+                "title": {
+                    "$ref": "#/$defs/DescribedModelTitle"
+                },
+                "vars": {
+                    "$ref": "#/$defs/ContextVariables",
+                    "title": "Vars"
+                }
+            },
+            "required": [
+                "file"
+            ],
+            "title": "ModelMetaclass",
+            "type": "object"
+        },
+        "pytest_loco__core__builder__ModelMetaclass__2": {
+            "additionalProperties": false,
+            "properties": {
+                "action": {
+                    "const": "empty",
+                    "title": "Action",
+                    "type": "string"
+                },
+                "description": {
+                    "$ref": "#/$defs/DescribedModelDescription"
+                },
+                "expect": {
+                    "description": "List of checks that must pass after the action execution. Each check validates some aspect of the action result or side effects. All expectations are evaluated to determine the success or failure of the step.",
+                    "items": {
+                        "$ref": "#/$defs/Check"
+                    },
+                    "title": "Action expectations",
+                    "type": "array"
+                },
+                "export": {
+                    "$ref": "#/$defs/ActionExports",
+                    "title": "Export"
+                },
+                "output": {
+                    "$ref": "#/$defs/ActionOutput",
+                    "title": "Output"
+                },
+                "spec": {
+                    "const": "step",
+                    "default": "step",
+                    "title": "Spec",
+                    "type": "string"
+                },
+                "title": {
+                    "$ref": "#/$defs/DescribedModelTitle"
+                },
+                "vars": {
+                    "$ref": "#/$defs/ContextVariables",
+                    "title": "Vars"
+                }
+            },
+            "required": [
+                "action"
+            ],
+            "title": "ModelMetaclass",
+            "type": "object"
+        },
+        "regex_Check": {
+            "additionalProperties": false,
+            "oneOf": [
+                {
+                    "not": {
+                        "anyOf": [
+                            {
+                                "required": [
+                                    "regex"
+                                ]
+                            },
+                            {
+                                "required": [
+                                    "regexMatch"
+                                ]
+                            }
+                        ]
+                    },
+                    "required": [
+                        "reMatch"
+                    ]
+                },
+                {
+                    "not": {
+                        "anyOf": [
+                            {
+                                "required": [
+                                    "reMatch"
+                                ]
+                            },
+                            {
+                                "required": [
+                                    "regexMatch"
+                                ]
+                            }
+                        ]
+                    },
+                    "required": [
+                        "regex"
+                    ]
+                },
+                {
+                    "not": {
+                        "anyOf": [
+                            {
+                                "required": [
+                                    "reMatch"
+                                ]
+                            },
+                            {
+                                "required": [
+                                    "regex"
+                                ]
+                            }
+                        ]
+                    },
+                    "required": [
+                        "regexMatch"
+                    ]
+                }
+            ],
+            "properties": {
+                "description": {
+                    "$ref": "#/$defs/DescribedModelDescription"
+                },
+                "ignoreCase": {
+                    "anyOf": [
+                        {
+                            "type": "boolean"
+                        },
+                        {
+                            "$ref": "#/$defs/Deferred"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "default": false,
+                    "description": "If true, performs case-insensitive matching.",
+                    "title": "Ignore case mode",
+                    "x-aliases": [
+                        "ignore_case",
+                        "ignoreCase"
+                    ]
+                },
+                "ignore_case": {
+                    "anyOf": [
+                        {
+                            "type": "boolean"
+                        },
+                        {
+                            "$ref": "#/$defs/Deferred"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "default": false,
+                    "description": "If true, performs case-insensitive matching.",
+                    "title": "Ignore case mode",
+                    "x-aliases": [
+                        "ignore_case",
+                        "ignoreCase"
+                    ]
+                },
+                "multiline": {
+                    "anyOf": [
+                        {
+                            "type": "boolean"
+                        },
+                        {
+                            "$ref": "#/$defs/Deferred"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "default": false,
+                    "description": "If true, performs multiline matching.",
+                    "title": "Multiline mode"
+                },
+                "reMatch": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/Deferred"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "description": "Actual value must be match to this pattern.",
+                    "title": "Regex pattern",
+                    "x-aliases": [
+                        "regex",
+                        "reMatch",
+                        "regexMatch"
+                    ]
+                },
+                "regex": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/Deferred"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "description": "Actual value must be match to this pattern.",
+                    "title": "Regex pattern",
+                    "x-aliases": [
+                        "regex",
+                        "reMatch",
+                        "regexMatch"
+                    ]
+                },
+                "regexMatch": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/Deferred"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "description": "Actual value must be match to this pattern.",
+                    "title": "Regex pattern",
+                    "x-aliases": [
+                        "regex",
+                        "reMatch",
+                        "regexMatch"
+                    ]
+                },
+                "title": {
+                    "$ref": "#/$defs/DescribedModelTitle"
+                },
+                "value": {
+                    "$ref": "#/$defs/CheckTargetValue"
+                }
+            },
+            "required": [
+                "value"
+            ],
+            "title": "regex_Check",
+            "type": "object"
+        }
+    },
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "anyOf": [
+        {
+            "$ref": "#/$defs/Case"
+        },
+        {
+            "$ref": "#/$defs/Template"
+        },
+        {
+            "$ref": "#/$defs/Step"
+        }
+    ],
+    "description": "JSON Schema for pytest-loco DSL documents",
+    "title": "pytest-loco"
+}
