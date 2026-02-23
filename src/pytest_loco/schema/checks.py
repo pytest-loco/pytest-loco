@@ -37,7 +37,7 @@ class BaseCheck(DescribedMixin, SchemaModel):
     value: Deferred[Value] = Field(
         title='Target value',
         description=(
-            'Value to be validated by the check. '
+            'Value to be validated by the check.\n'
             'The value is resolved against the execution context before '
             'the check is executed.'
         ),

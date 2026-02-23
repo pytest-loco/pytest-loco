@@ -130,7 +130,7 @@ spec: case
 title: A test case
 envs:
   - name: TEST_VAR
-    type: integer
+    type: int
 vars:
   value: !var envs.TEST_VAR
 metadata:

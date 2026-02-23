@@ -34,9 +34,8 @@ class BaseContent(SchemaModel):
         validation_alias='format',
         title='Content format type',
         description=(
-            'Identifier of the content format or protocol. '
-            'Defines how the source value should be interpreted or processed '
-            '(for example: json, xml, yaml, text).'
+            'Identifier of the content format or protocol.\n'
+            'Defines how the source value should be interpreted or processed.'
         ),
         json_schema_extra={
             'x-ref': 'ContentFormatType',
@@ -46,8 +45,8 @@ class BaseContent(SchemaModel):
     source: Deferred[Value] = Field(
         title='Content source',
         description=(
-            'Input value to be processed by the content operation. '
-            'May reference variables from the execution context or contain '
+            'Input value to be processed by the content operation.\n'
+            'May reference variables from the context or contain '
             'raw data, depending on the DSL usage.'
         ),
         json_schema_extra={

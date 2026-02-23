@@ -146,10 +146,7 @@ class DescribedMixin(SchemaModel):
     title: str | None = Field(
         default=None,
         title='Title',
-        description=(
-            'Short human-readable title of the DSL element. '
-            'Typically used in reports, logs, or user interfaces.'
-        ),
+        description='Short human-readable title of the DSL element. ',
         json_schema_extra={
             'x-ref': 'DescribedModelTitle',
         },
@@ -159,9 +156,7 @@ class DescribedMixin(SchemaModel):
         default=None,
         title='Description',
         description=(
-            'Detailed human-readable description of the DSL element. '
-            'May span multiple lines and is intended for documentation '
-            'and reporting purposes.'
+            'Detailed human-readable description of the DSL element.'
         ),
         json_schema_extra={
             'x-ref': 'DescribedModelDescription',

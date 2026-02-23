@@ -45,8 +45,8 @@ def test_input_definition_name(name: str, except_message: 'Pattern | None') -> N
 
 
 @pytest.mark.parametrize('value_type, except_message', (
-    pytest.param('string', None, id='string type'),
-    pytest.param('integer', None, id='integer type'),
+    pytest.param('str', None, id='string type'),
+    pytest.param('int', None, id='integer type'),
     pytest.param('float', None, id='float type'),
     pytest.param('bool', None, id='bool type'),
     pytest.param('number', r'^1 validation error', id='unsupported type'),
@@ -80,7 +80,7 @@ def test_input_definition_type(value_type: str, except_message: 'Pattern | None'
 def test_input_definition_default_required(default_value: str | None, required: bool | None,
                                            except_message: 'Pattern | None') -> None:
     """Validate interaction between default and required flags."""
-    values = {'name': 'TEST_VAR', 'description': 'A test variable', 'type': 'string'}
+    values = {'name': 'TEST_VAR', 'description': 'A test variable', 'type': 'str'}
     if default_value is not None:
         values['default'] = default_value
     if required is not None:
@@ -121,9 +121,9 @@ def test_environment_definition_default(value: str | None, mocker: 'MockerFixtur
 
 
 @pytest.mark.parametrize('value_type, model_type, secret', (
-    pytest.param('string', str, False, id='string type'),
-    pytest.param('string', pydantic.SecretStr, True, id='secret string type'),
-    pytest.param('integer', int, False, id='integer type'),
+    pytest.param('str', str, False, id='string type'),
+    pytest.param('str', pydantic.SecretStr, True, id='secret string type'),
+    pytest.param('int', int, False, id='integer type'),
     pytest.param('float', float, False, id='float type'),
     pytest.param('bool', bool, False, id='bool type'),
 ))
@@ -135,7 +135,7 @@ def test_environment_definition_types(value_type: str, model_type: type,
     definition = EnvironmentDefinition.model_validate([{
         'name': 'TEST_VAR',
         'type': value_type,
-        'secret': secret and value_type == 'string',
+        'secret': secret and value_type == 'str',
     }])
 
     fields = definition.build_fields()
@@ -194,8 +194,8 @@ def test_environment_definition_secret(mocker: 'MockerFixture') -> None:
 
 
 @pytest.mark.parametrize('value_type, except_message', (
-    pytest.param('string', None, id='string type'),
-    pytest.param('integer', r'1 validation error', id='integer type'),
+    pytest.param('str', None, id='string type'),
+    pytest.param('int', r'1 validation error', id='integer type'),
     pytest.param('float', r'1 validation error', id='float type'),
     pytest.param('bool', r'1 validation error', id='bool type'),
 ))

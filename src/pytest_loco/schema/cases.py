@@ -33,8 +33,9 @@ class Parameter(DescribedMixin, SchemaModel):
         pattern=VARIABLE_PATTERN,
         title='Parameter name',
         description=(
-            'Identifier of the parameter. The name is used to reference the '
-            'parameter value in expressions, templates, and step definitions.'
+            'Identifier of the parameter.\n'
+            'The name is used to reference the parameter value '
+            'in expressions, templates, and step definitions.'
         ),
         json_schema_extra={
             'x-ref': 'ParameterName',
@@ -45,9 +46,7 @@ class Parameter(DescribedMixin, SchemaModel):
         default_factory=list,
         min_length=1,
         title='Parameter values',
-        description=(
-            'List of possible values for the parameter.'
-        ),
+        description='List of possible values for the parameter.',
     )
 
 
@@ -69,9 +68,7 @@ class Case(ContextMixin, EnvironmentMixin, DescribedMixin, SchemaModel):
         default_factory=dict,
         title='Case metadata',
         description=(
-            'Additional metadata associated with the test case. '
-            'Used by reporting tools, plugins, or external integrations '
-            'to attach labels, tags, or other auxiliary information.'
+            'Additional metadata associated with the test case.'
         ),
     )
 
@@ -79,8 +76,9 @@ class Case(ContextMixin, EnvironmentMixin, DescribedMixin, SchemaModel):
         default_factory=list,
         title='Case parameters',
         description=(
-            'Definition of parameters used to drive data-driven execution of '
-            'the test case. Parameters define the input space and control '
+            'Definition of parameters used to drive data-driven '
+            'execution of the test case.\n'
+            'Parameters define the input space and control '
             'combinatorial execution of the case.'
         ),
     )

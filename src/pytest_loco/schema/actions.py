@@ -15,20 +15,17 @@ and plugins.
 """
 
 from collections.abc import Callable, Mapping
-from typing import TYPE_CHECKING, ClassVar, Literal
+from typing import ClassVar, Literal
 
 from pydantic import Field, FilePath, RootModel
 
 from pytest_loco.context import ContextDict
 from pytest_loco.models import DescribedMixin, SchemaModel
 from pytest_loco.names import Action, Variable  # noqa: TC001
-from pytest_loco.values import Deferred, RuntimeValue, Scalar, normalize
+from pytest_loco.values import Deferred, RuntimeValue, Value, normalize
 
 from .checks import BaseCheck  # noqa: TC001
 from .contexts import ContextMixin
-
-if TYPE_CHECKING:
-    from pytest_loco.values import Value
 
 #: The runner receives input parameters and returns a dictionary
 #: of produced values. The returned values are not automatically
@@ -60,7 +57,7 @@ class BaseAction(ContextMixin, DescribedMixin, SchemaModel):
         default_factory=list,
         title='Action expectations',
         description=(
-            'List of checks that must pass after the action execution. '
+            'List of checks that must pass after the action execution.\n'
             'Each check validates some aspect of the action result or '
             'side effects. All expectations are evaluated to determine '
             'the success or failure of the step.'
@@ -71,8 +68,9 @@ class BaseAction(ContextMixin, DescribedMixin, SchemaModel):
         default='result',
         title='Result variable',
         description=(
-            'Name of the variable under which the action result context '
-            'will be stored. The stored value may later be referenced '
+            'Name of the variable under which the action result '
+            'context will be stored.\n'
+            'The stored value may later be referenced '
             'or selectively exported into the execution context.'
         ),
         json_schema_extra={
@@ -80,12 +78,13 @@ class BaseAction(ContextMixin, DescribedMixin, SchemaModel):
         },
     )
 
-    export: dict[Variable, Deferred[Scalar]] = Field(
+    export: dict[Variable, Deferred[Value]] = Field(
         default_factory=dict,
         title='Exported variables',
         description=(
-            'Mapping of variable names to values derived from the action '
-            'result. Exported variables are merged into the execution '
+            'Mapping of variable names to values derived from '
+            'the action result.\n'
+            'Exported variables are merged into the execution '
             'context and become available to subsequent steps.'
         ),
         json_schema_extra={
@@ -93,7 +92,7 @@ class BaseAction(ContextMixin, DescribedMixin, SchemaModel):
         },
     )
 
-    def __call__(self, context: dict[str, 'Value']) -> dict[str, 'Value']:
+    def __call__(self, context: dict[str, Value]) -> dict[str, Value]:
         """Execute the action.
 
         Resolves local context variables, executes the action runner,
@@ -146,13 +145,14 @@ class IncludeAction(BaseAction):
         validation_alias='file',
         title='Template file path',
         description=(
-            'Path to a DSL template file to include. The file must exist, '
-            'be readable, and contain a valid DSL template definition. '
-            'The template will be parsed and executed at runtime.'
+            'Path to a DSL template file to include.\n'
+            'The file must exist, be readable, and contain a valid '
+            'DSL template definition. The template will be parsed '
+            'and executed at runtime.'
         ),
     )
 
-    def __call__(self, context: dict[str, 'Value']) -> dict[str, 'Value']:
+    def __call__(self, context: dict[str, Value]) -> dict[str, Value]:
         """Execute the action.
 
         Resolves local context variables and return it as is.

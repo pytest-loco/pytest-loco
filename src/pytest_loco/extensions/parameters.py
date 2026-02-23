@@ -38,7 +38,7 @@ class Attribute(DescribedMixin, SchemaModel):
         default=Deferred,
         title='Base type',
         description=(
-            'Underlying Python type of the attribute value. '
+            'Underlying Python type of the attribute value.\n'
             'This type is used as the primary runtime and validation type '
             'when constructing the schema.'
         ),
@@ -58,7 +58,7 @@ class Attribute(DescribedMixin, SchemaModel):
         min_length=1,
         title='Example values',
         description=(
-            'Representative example values for the attribute. '
+            'Representative example values for the attribute.\n'
             'Used for documentation, schema introspection, and tooling.'
         ),
     )
@@ -67,8 +67,16 @@ class Attribute(DescribedMixin, SchemaModel):
         default=None,
         title='Default value',
         description=(
-            'Default value of the attribute. '
+            'Default value of the attribute.\n'
             'Used when the attribute is optional and not explicitly provided.'
+        ),
+    )
+
+    deferred: bool = Field(
+        default=True,
+        title='Deferred flag',
+        description=(
+            'Indicates whether the attribute can be resolved at runtime. '
         ),
     )
 
@@ -76,7 +84,7 @@ class Attribute(DescribedMixin, SchemaModel):
         default=False,
         title='Required flag',
         description=(
-            'Indicates whether the attribute must be explicitly provided. '
+            'Indicates whether the attribute must be explicitly provided.\n'
             'Required attributes must not define a default value.'
         ),
     )
@@ -136,9 +144,12 @@ class Attribute(DescribedMixin, SchemaModel):
                 else AliasChoices(*self.aliases)
             )
 
-        field_type: BaseType = Deferred | None
+        field_type: BaseType = None
         if self.base and self.base not in (Deferred, Value):
-            field_type = self.base | Deferred | None
+            field_type = self.base | None
+
+        if self.deferred:
+            field_type |= Deferred
 
         return Annotated[
             field_type, Field(

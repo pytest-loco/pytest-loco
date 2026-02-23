@@ -44,7 +44,7 @@ class Actor(ParametersMixin, SchemaModel):
     actor: ActionRunner = Field(
         title='Actor function',
         description=(
-            'Callable implementing the action execution logic. '
+            'Callable implementing the action execution logic.\n'
             'Receives a dictionary of resolved input parameters and returns '
             'a dictionary of produced values.'
         ),
@@ -53,7 +53,7 @@ class Actor(ParametersMixin, SchemaModel):
     name: Variable = Field(
         title='Action discriminator name',
         description=(
-            'Name of the action discriminator. '
+            'Value of the action discriminator.\n'
             'Used to populate the `action` field in the generated action model '
             'and to uniquely identify the action type in the DSL.'
         ),

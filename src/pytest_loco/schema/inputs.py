@@ -14,6 +14,8 @@ from pytest_loco.models import SchemaModel, SettingsModel
 from pytest_loco.names import VARIABLE_PATTERN
 from pytest_loco.values import Value  # noqa: TC001
 
+type TypeName = Literal['str', 'int', 'float', 'bool', 'object', 'list']
+
 
 class InputDefinition(SchemaModel):
     """Definition of a single input parameter.
@@ -28,7 +30,7 @@ class InputDefinition(SchemaModel):
         pattern=VARIABLE_PATTERN,
         title='Input name',
         description=(
-            'Unique identifier of the input parameter. '
+            'Unique identifier of the input parameter.\n'
             'Used to reference the input value in expressions, templates, and '
             'variable lookups. Must start with a letter and contain only letters, '
             'digits, and underscores.'
@@ -40,23 +42,17 @@ class InputDefinition(SchemaModel):
     description: str | None = Field(
         default=None,
         title='Input description',
-        description=(
-            'Human-readable description of the input parameter. '
-            'Used for documentation, reports, and user interfaces.'
-        ),
+        description='Human-readable description of the input parameter.',
         json_schema_extra={
             'x-ref': 'InputDescription',
         },
     )
 
-    value_type: Literal['string', 'integer', 'float', 'bool', 'object', 'list'] = Field(
-        default='string',
+    value_type: TypeName = Field(
+        default='str',
         validation_alias='type',
         title='Input type',
-        description=(
-            'Scalar data type of the input parameter. '
-            'Supported types are: string, integer, float, and bool.'
-        ),
+        description='Data type of the input parameter.',
         json_schema_extra={
             'x-ref': 'InputType',
         },
@@ -66,7 +62,7 @@ class InputDefinition(SchemaModel):
         default=None,
         title='Default value',
         description=(
-            'Default value of the input parameter. '
+            'Default value of the input parameter.\n'
             'Used when the input is not explicitly provided. '
             'Must not be specified for required inputs.'
         ),
@@ -79,7 +75,7 @@ class InputDefinition(SchemaModel):
         title='Required flag',
         description=(
             'Indicates whether the input parameter must be explicitly provided '
-            'by the user or calling scenario. '
+            'by the user or calling scenario.\n'
             'Required inputs must not define a default value.'
         ),
         json_schema_extra={
@@ -91,7 +87,7 @@ class InputDefinition(SchemaModel):
         default=False,
         title='Secret flag',
         description=(
-            'Marks the input parameter as sensitive. '
+            'Marks the input parameter as sensitive.\n'
             'Secret inputs are masked in logs, reports, and error messages.'
         ),
         json_schema_extra={
@@ -132,7 +128,7 @@ class InputDefinition(SchemaModel):
         Raises:
             ValueError: If `secret` is specified for a non-string type.
         """
-        if not self.secret or self.value_type == 'string':
+        if not self.secret or self.value_type == 'str':
             return self
 
         raise ValueError('specified secret on non-string type')
@@ -166,11 +162,11 @@ class BaseInputsDefinition(RootModel[list[InputDefinition]]):
             ValueError: If type is not supported.
         """
         match definition.value_type:
-            case 'string':
+            case 'str':
                 if definition.secret:
                     return SecretStr
                 return str
-            case 'integer':
+            case 'int':
                 return int
             case 'float':
                 return float
@@ -257,7 +253,7 @@ class EnvironmentMixin(SchemaModel):
         validation_alias='envs',
         title='Environment definition',
         description=(
-            'Definition of environment-based inputs required by the template. '
+            'Definition of environment-based inputs required by the template.\n'
             'Describes external configuration values, such as environment '
             'variables or secrets, that must be provided at execution time.'
         ),

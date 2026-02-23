@@ -41,7 +41,7 @@ class Checker(ParametersMixin, SchemaModel):
     checker: CheckRunner = Field(
         title='Checker function',
         description=(
-            'Callable implementing the check logic. '
+            'Callable implementing the check logic.\n'
             'Receives the value being checked and a dictionary of resolved '
             'parameter values. Must return True if the check passes, '
             'or False otherwise.'
@@ -51,7 +51,7 @@ class Checker(ParametersMixin, SchemaModel):
     name: Variable = Field(
         title='Discriminator field name',
         description=(
-            'Name of the discriminator field for the generated check model. '
+            'Value of the discriminator field for the generated check model.\n'
             'This field uniquely identifies the check type and also holds '
             'the primary value being validated.'
         ),

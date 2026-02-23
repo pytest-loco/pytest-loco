@@ -28,7 +28,7 @@ class ContextMixin(SchemaModel):
         validation_alias='vars',
         title='Local context',
         description=(
-            'Local context variables provided to block. '
+            'Local context variables provided to block.\n'
             'These variables are added to the execution context and can be '
             'referenced by subsequent steps.'
         ),

@@ -44,7 +44,7 @@ class ContentEncoder(ParametersMixin, SchemaModel):
     encoder: ContentRunner = Field(
         title='Encoder function',
         description=(
-            'Callable implementing the encoding logic. '
+            'Callable implementing the encoding logic.\n'
             'Receives the resolved source value and a dictionary of '
             'resolved parameters. Returns an encoded value.'
         ),
@@ -128,7 +128,7 @@ class ContentTransformer(ParametersMixin, SchemaModel):
     transformer: ContentRunner = Field(
         title='Transformer function',
         description=(
-            'Callable implementing the transformation logic. '
+            'Callable implementing the transformation logic.\n'
             'Receives the decoded value and transformer-specific parameters.'
         ),
     )
@@ -136,7 +136,7 @@ class ContentTransformer(ParametersMixin, SchemaModel):
     name: Variable = Field(
         title='Discriminator field name',
         description=(
-            'Name of the discriminator field identifying the transformer. '
+            'Name of the discriminator field identifying the transformer.\n'
             'This field also holds the primary input value for transformation.'
         ),
     )
@@ -232,7 +232,7 @@ class ContentDecoder(ParametersMixin, SchemaModel):
     decoder: ContentRunner = Field(
         title='Decoder function',
         description=(
-            'Callable implementing decoding logic. '
+            'Callable implementing decoding logic.\n'
             'Receives encoded data and returns decoded value.'
         ),
     )
@@ -241,7 +241,7 @@ class ContentDecoder(ParametersMixin, SchemaModel):
         default_factory=list,
         title='Optional transformers',
         description=(
-            'Optional list of transformers applied after decoding. '
+            'Optional list of transformers applied after decoding.\n'
             'At most one transformer may be selected in DSL usage.'
         ),
     )
