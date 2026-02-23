@@ -30,7 +30,7 @@ if TYPE_CHECKING:
     from io import TextIOBase
 
 if TYPE_CHECKING:
-    from yaml import BaseLoader
+    from pytest_loco.schema import YAMLLoader
 
 #: Parsed file header.
 #: Can be a Case header, a Template header, or None if no header is present.
@@ -59,7 +59,7 @@ class DocumentParser(ExtensionsBuilderMixin, ExtensionsLoaderMixin):
     The parser is stateful and may cache the built DSL model for reuse.
     """
 
-    def __init__(self, loader: type['BaseLoader'],
+    def __init__(self, loader: type['YAMLLoader'],
                  strict: bool = False, allow_lambda: bool = False,
                  auto_attach: bool = True,
                  auto_build: bool = False) -> None:
@@ -148,7 +148,7 @@ class DocumentParser(ExtensionsBuilderMixin, ExtensionsLoaderMixin):
             add_constructor('!dump', encoder_constructor, Loader=self.loader)
 
         for name, instruction in self.instructions.items():
-            add_constructor(f'!{name}', instruction(), Loader=self.loader)
+            add_constructor(f'!{name}', instruction(), Loader=self.loader)  # type: ignore[arg-type]
 
     def build(self) -> type[Document]:
         """Build and cache the root DSL document model.

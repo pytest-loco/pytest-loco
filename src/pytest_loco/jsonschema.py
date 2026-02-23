@@ -31,7 +31,7 @@ class SchemaGenerator(GenerateJsonSchema):
         Returns:
             Parser configured with SafeLoader and non-strict validation.
         """
-        class ClearLoader(SafeLoader):  # type: ignore[misc]
+        class ClearLoader(SafeLoader):
             pass
 
         return DocumentParser(ClearLoader, strict=False)

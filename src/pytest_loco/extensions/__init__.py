@@ -18,6 +18,7 @@ from pydantic import Field
 
 from pytest_loco.models import SchemaModel
 from pytest_loco.names import Variable  # noqa: TC001
+from pytest_loco.schema import YAMLLoader, YAMLNode
 
 from .actors import Actor
 from .checkers import Checker
@@ -36,6 +37,8 @@ __all__ = (
     'Instruction',
     'Plugin',
     'Schema',
+    'YAMLLoader',
+    'YAMLNode',
 )
 
 

@@ -8,8 +8,7 @@ from json import dumps
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from click import Path as PathParam
-from click import argument, echo, group, option
+from click import argument, echo, group, option, types
 from yaml import safe_load
 
 from pytest_loco.jsonschema import SchemaGenerator
@@ -21,11 +20,11 @@ if TYPE_CHECKING:
 CUSTOM_TAGS_OPTION = 'yaml.customTags'
 SCHEMAS_OPTION = 'yaml.schemas'
 
-OutputFilepath = PathParam(
+OutputFilepath = types.Path(
     dir_okay=False,
     readable=True,
     writable=True,
-    path_type=Path,
+    path_type=Path,  # type: ignore[type-var]
 )
 
 
@@ -57,11 +56,16 @@ def _update_tags(parser: 'DocumentParser', tags: list[str]) -> list[str]:
     if not isinstance(tags, list):
         tags = []
 
+    instructions = (
+        f'!{name} {instruction.node_type}'  # type: ignore[attr-defined]
+        for name, instruction in parser.instructions.items()
+    )
+
     return sorted({
         *tags,
         '!dump mapping',
         '!load mapping',
-        *(f'!{name} scalar' for name in parser.instructions),
+        *instructions,
     })
 
 
@@ -81,10 +85,7 @@ def _update_schemas(schema: str,
 
     return {
         **schemas,
-        schema: [
-            'test_*.yaml',
-            'test_*.yml',
-        ],
+        schema: 'test_*.{yaml,yml}',
     }
 
 

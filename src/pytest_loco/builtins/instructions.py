@@ -22,8 +22,8 @@ from pytest_loco.errors import DSLError, DSLRuntimeError, DSLSchemaError
 from pytest_loco.extensions import Instruction
 
 if TYPE_CHECKING:
-    from yaml import BaseLoader
-    from yaml.nodes import ScalarNode
+    from pytest_loco.schema import YAMLLoader, YAMLNode
+
 
 #: Pattern for duration.
 #: Identifiers must start with a digits and contains a unit.
@@ -43,7 +43,7 @@ _DURATION_UNITS = {
 }
 
 
-def variable_constructor(loader: 'BaseLoader', node: 'ScalarNode') -> VariableLookup:
+def variable_constructor(loader: 'YAMLLoader', node: 'YAMLNode') -> VariableLookup:
     """Construct a variable lookup instruction.
 
     This constructor is used for instructions such as `!var` and `!ctx`.
@@ -70,7 +70,7 @@ def variable_constructor(loader: 'BaseLoader', node: 'ScalarNode') -> VariableLo
         raise DSLSchemaError.from_yaml_node('Invalid variable path', node) from base
 
 
-def secret_constructor(loader: 'BaseLoader', node: 'ScalarNode') -> SecretLookup:
+def secret_constructor(loader: 'YAMLLoader', node: 'YAMLNode') -> SecretLookup:
     """Construct a secret lookup instruction.
 
     This constructor is used for the `!secret` instruction and produces
@@ -97,7 +97,7 @@ def secret_constructor(loader: 'BaseLoader', node: 'ScalarNode') -> SecretLookup
         raise DSLSchemaError.from_yaml_node('Invalid secret variable path', node) from base
 
 
-def lambda_constructor(loader: 'BaseLoader', node: 'ScalarNode') -> LambdaLookup:
+def lambda_constructor(loader: 'YAMLLoader', node: 'YAMLNode') -> LambdaLookup:
     """Construct a lambda expression lookup instruction.
 
     This constructor is used for the `!lambda` instruction and produces
@@ -128,7 +128,7 @@ def lambda_constructor(loader: 'BaseLoader', node: 'ScalarNode') -> LambdaLookup
         raise DSLSchemaError.from_yaml_node('Invalid syntax for lambda body', node) from base
 
 
-def date_constructor(loader: 'BaseLoader', node: 'ScalarNode') -> date:
+def date_constructor(loader: 'YAMLLoader', node: 'YAMLNode') -> date:
     """YAML constructor for ISO-formatted date values.
 
     This constructor parses a scalar node containing a date in ISO 8601
@@ -154,7 +154,7 @@ def date_constructor(loader: 'BaseLoader', node: 'ScalarNode') -> date:
         raise DSLSchemaError.from_yaml_node('Invalid date format', node) from base
 
 
-def datetime_constructor(loader: 'BaseLoader', node: 'ScalarNode') -> datetime:
+def datetime_constructor(loader: 'YAMLLoader', node: 'YAMLNode') -> datetime:
     """YAML constructor for ISO-formatted datetime values.
 
     This constructor parses a scalar node containing a datetime in ISO 8601
@@ -180,7 +180,7 @@ def datetime_constructor(loader: 'BaseLoader', node: 'ScalarNode') -> datetime:
         raise DSLSchemaError.from_yaml_node('Invalid datetime format', node) from base
 
 
-def timedelta_constructor(loader: 'BaseLoader', node: 'ScalarNode') -> timedelta:
+def timedelta_constructor(loader: 'YAMLLoader', node: 'YAMLNode') -> timedelta:
     """YAML constructor for timedelta values expressed in seconds.
 
     This constructor parses a scalar node containing a numeric value
@@ -206,7 +206,7 @@ def timedelta_constructor(loader: 'BaseLoader', node: 'ScalarNode') -> timedelta
         raise DSLSchemaError.from_yaml_node('Invalid timedelta format', node) from base
 
 
-def duration_constructor(loader: 'BaseLoader', node: 'ScalarNode') -> timedelta:
+def duration_constructor(loader: 'YAMLLoader', node: 'YAMLNode') -> timedelta:
     """YAML constructor for timedelta values expressed in formatted string.
 
     This constructor parses a scalar node containing a string value
@@ -241,7 +241,7 @@ def duration_constructor(loader: 'BaseLoader', node: 'ScalarNode') -> timedelta:
         raise DSLSchemaError.from_yaml_node('Invalid duration value', node) from base
 
 
-def base64_constructor(loader: 'BaseLoader', node: 'ScalarNode') -> bytes:
+def base64_constructor(loader: 'YAMLLoader', node: 'YAMLNode') -> bytes:
     """YAML constructor for Base64-encoded binary data.
 
     This constructor parses a scalar node containing Base64-encoded data
@@ -275,7 +275,7 @@ def base64_constructor(loader: 'BaseLoader', node: 'ScalarNode') -> bytes:
         raise DSLSchemaError.from_yaml_node('Invalid base64-encoded value', node) from base
 
 
-def binary_hex_constructor(loader: 'BaseLoader', node: 'ScalarNode') -> bytes:
+def binary_hex_constructor(loader: 'YAMLLoader', node: 'YAMLNode') -> bytes:
     """YAML constructor for hexadecimal-encoded binary data.
 
     This constructor parses a scalar node containing hexadecimal data
@@ -305,7 +305,7 @@ def binary_hex_constructor(loader: 'BaseLoader', node: 'ScalarNode') -> bytes:
         raise DSLSchemaError.from_yaml_node('Invalid hexadecimal-encoded value', node) from base
 
 
-def text_file_constructor(loader: 'BaseLoader', node: 'ScalarNode') -> str:
+def text_file_constructor(loader: 'YAMLLoader', node: 'YAMLNode') -> str:
     """YAML constructor for loading text file contents.
 
     This constructor treats the scalar value as a filesystem path and
@@ -339,7 +339,7 @@ def text_file_constructor(loader: 'BaseLoader', node: 'ScalarNode') -> str:
         raise DSLRuntimeError.from_yaml_node('Invalid text IO', node) from base
 
 
-def binary_file_constructor(loader: 'BaseLoader', node: 'ScalarNode') -> bytes:
+def binary_file_constructor(loader: 'YAMLLoader', node: 'YAMLNode') -> bytes:
     """YAML constructor for loading binary file contents.
 
     This constructor treats the scalar value as a filesystem path and

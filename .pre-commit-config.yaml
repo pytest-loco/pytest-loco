@@ -22,6 +22,8 @@ repos:
           - pydantic
           - pydantic-settings
           - pytest
+          - types-click
+          - types-pyyaml
   - repo: local
     hooks:
     - id: pytest

@@ -1,10 +1,10 @@
 {
     "$defs": {
         "ActionExports": {
-            "description": "Mapping of variable names to values derived from the action result. Exported variables are merged into the execution context and become available to subsequent steps.",
+            "description": "Mapping of variable names to values derived from the action result.\nExported variables are merged into the execution context and become available to subsequent steps.",
             "patternProperties": {
                 "^[a-zA-Z][\\w]*$": {
-                    "$ref": "#/$defs/Deferred_Scalar_"
+                    "$ref": "#/$defs/Deferred_Value_"
                 }
             },
             "propertyNames": {
@@ -21,7 +21,7 @@
         },
         "ActionOutput": {
             "default": "result",
-            "description": "Name of the variable under which the action result context will be stored. The stored value may later be referenced or selectively exported into the execution context.",
+            "description": "Name of the variable under which the action result context will be stored.\nThe stored value may later be referenced or selectively exported into the execution context.",
             "examples": [
                 "userId",
                 "api_token",
@@ -41,11 +41,11 @@
                 },
                 "envs": {
                     "$ref": "#/$defs/EnvironmentDefinition",
-                    "description": "Definition of environment-based inputs required by the template. Describes external configuration values, such as environment variables or secrets, that must be provided at execution time.",
+                    "description": "Definition of environment-based inputs required by the template.\nDescribes external configuration values, such as environment variables or secrets, that must be provided at execution time.",
                     "title": "Environment definition"
                 },
                 "metadata": {
-                    "description": "Additional metadata associated with the test case. Used by reporting tools, plugins, or external integrations to attach labels, tags, or other auxiliary information.",
+                    "description": "Additional metadata associated with the test case.",
                     "patternProperties": {
                         "^[a-zA-Z][\\w]*$": {
                             "$ref": "#/$defs/Value"
@@ -63,7 +63,7 @@
                     "type": "object"
                 },
                 "params": {
-                    "description": "Definition of parameters used to drive data-driven execution of the test case. Parameters define the input space and control combinatorial execution of the case.",
+                    "description": "Definition of parameters used to drive data-driven execution of the test case.\nParameters define the input space and control combinatorial execution of the case.",
                     "items": {
                         "$ref": "#/$defs/Parameter"
                     },
@@ -117,12 +117,12 @@
         },
         "CheckTargetValue": {
             "$ref": "#/$defs/Deferred_Value_",
-            "description": "Value to be validated by the check. The value is resolved against the execution context before the check is executed.",
+            "description": "Value to be validated by the check.\nThe value is resolved against the execution context before the check is executed.",
             "title": "Target value",
             "x-ref": "CheckTargetValue"
         },
         "ContextVariables": {
-            "description": "Local context variables provided to block. These variables are added to the execution context and can be referenced by subsequent steps.",
+            "description": "Local context variables provided to block.\nThese variables are added to the execution context and can be referenced by subsequent steps.",
             "patternProperties": {
                 "^[a-zA-Z][\\w]*$": {
                     "$ref": "#/$defs/Deferred_Value_"
@@ -160,36 +160,11 @@
                 }
             ]
         },
-        "DeferredCallable_Scalar_": {
-            "description": "Runtime value"
-        },
         "DeferredCallable_TypeVar_": {
             "description": "Runtime value"
         },
         "DeferredCallable_Value_": {
             "description": "Runtime value"
-        },
-        "Deferred_Scalar_": {
-            "anyOf": [
-                {
-                    "$ref": "#/$defs/Scalar"
-                },
-                {
-                    "$ref": "#/$defs/DeferredCallable_Scalar_"
-                },
-                {
-                    "items": {
-                        "$ref": "#/$defs/Deferred_Scalar_"
-                    },
-                    "type": "array"
-                },
-                {
-                    "additionalProperties": {
-                        "$ref": "#/$defs/Deferred_Scalar_"
-                    },
-                    "type": "object"
-                }
-            ]
         },
         "Deferred_TypeVar_": {
             "anyOf": [
@@ -235,7 +210,7 @@
         },
         "DescribedModelDescription": {
             "default": null,
-            "description": "Detailed human-readable description of the DSL element. May span multiple lines and is intended for documentation and reporting purposes.",
+            "description": "Detailed human-readable description of the DSL element.",
             "title": "Description",
             "type": [
                 "string",
@@ -245,7 +220,7 @@
         },
         "DescribedModelTitle": {
             "default": null,
-            "description": "Short human-readable title of the DSL element. Typically used in reports, logs, or user interfaces.",
+            "description": "Short human-readable title of the DSL element. ",
             "title": "Title",
             "type": [
                 "string",
@@ -265,7 +240,7 @@
         "InputDefaultValue": {
             "$ref": "#/$defs/Value",
             "default": null,
-            "description": "Default value of the input parameter. Used when the input is not explicitly provided. Must not be specified for required inputs.",
+            "description": "Default value of the input parameter.\nUsed when the input is not explicitly provided. Must not be specified for required inputs.",
             "title": "Default value",
             "x-ref": "InputDefaultValue"
         },
@@ -293,8 +268,7 @@
                     "title": "Secret"
                 },
                 "type": {
-                    "$ref": "#/$defs/InputType",
-                    "title": "Type"
+                    "$ref": "#/$defs/InputType"
                 }
             },
             "required": [
@@ -305,7 +279,7 @@
         },
         "InputDescription": {
             "default": null,
-            "description": "Human-readable description of the input parameter. Used for documentation, reports, and user interfaces.",
+            "description": "Human-readable description of the input parameter.",
             "title": "Input description",
             "type": [
                 "string",
@@ -314,7 +288,7 @@
             "x-ref": "InputDescription"
         },
         "InputName": {
-            "description": "Unique identifier of the input parameter. Used to reference the input value in expressions, templates, and variable lookups. Must start with a letter and contain only letters, digits, and underscores.",
+            "description": "Unique identifier of the input parameter.\nUsed to reference the input value in expressions, templates, and variable lookups. Must start with a letter and contain only letters, digits, and underscores.",
             "pattern": "^(?P<name>[a-zA-Z][\\w]*)$",
             "title": "Input name",
             "type": "string",
@@ -322,31 +296,23 @@
         },
         "InputRequiredFlag": {
             "default": false,
-            "description": "Indicates whether the input parameter must be explicitly provided by the user or calling scenario. Required inputs must not define a default value.",
+            "description": "Indicates whether the input parameter must be explicitly provided by the user or calling scenario.\nRequired inputs must not define a default value.",
             "title": "Required flag",
             "type": "boolean",
             "x-ref": "InputRequiredFlag"
         },
         "InputSecretFlag": {
             "default": false,
-            "description": "Marks the input parameter as sensitive. Secret inputs are masked in logs, reports, and error messages.",
+            "description": "Marks the input parameter as sensitive.\nSecret inputs are masked in logs, reports, and error messages.",
             "title": "Secret flag",
             "type": "boolean",
             "x-ref": "InputSecretFlag"
         },
         "InputType": {
-            "default": "string",
-            "description": "Scalar data type of the input parameter. Supported types are: string, integer, float, and bool.",
-            "enum": [
-                "string",
-                "integer",
-                "float",
-                "bool",
-                "object",
-                "list"
-            ],
+            "$ref": "#/$defs/TypeName",
+            "default": "str",
+            "description": "Data type of the input parameter.",
             "title": "Input type",
-            "type": "string",
             "x-ref": "InputType"
         },
         "Parameter": {
@@ -380,7 +346,7 @@
             "type": "object"
         },
         "ParameterName": {
-            "description": "Identifier of the parameter. The name is used to reference the parameter value in expressions, templates, and step definitions.",
+            "description": "Identifier of the parameter.\nThe name is used to reference the parameter value in expressions, templates, and step definitions.",
             "pattern": "^(?P<name>[a-zA-Z][\\w]*)$",
             "title": "Parameter name",
             "type": "string",
@@ -452,7 +418,7 @@
                 },
                 "envs": {
                     "$ref": "#/$defs/EnvironmentDefinition",
-                    "description": "Definition of environment-based inputs required by the template. Describes external configuration values, such as environment variables or secrets, that must be provided at execution time.",
+                    "description": "Definition of environment-based inputs required by the template.\nDescribes external configuration values, such as environment variables or secrets, that must be provided at execution time.",
                     "title": "Environment definition"
                 },
                 "params": {
@@ -478,6 +444,17 @@
             ],
             "title": "Template",
             "type": "object"
+        },
+        "TypeName": {
+            "enum": [
+                "str",
+                "int",
+                "float",
+                "bool",
+                "object",
+                "list"
+            ],
+            "type": "string"
         },
         "Value": {
             "anyOf": [
@@ -1440,7 +1417,7 @@
                     "title": "Export"
                 },
                 "file": {
-                    "description": "Path to a DSL template file to include. The file must exist, be readable, and contain a valid DSL template definition. The template will be parsed and executed at runtime.",
+                    "description": "Path to a DSL template file to include.\nThe file must exist, be readable, and contain a valid DSL template definition. The template will be parsed and executed at runtime.",
                     "format": "file-path",
                     "title": "Template file path",
                     "type": "string"

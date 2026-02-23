@@ -22,9 +22,6 @@
         "!var scalar"
     ],
     "yaml.schemas": {
-        ".vscode/loco.schema.json": [
-            "test_*.yaml",
-            "test_*.yml"
-        ]
+        ".vscode/loco.schema.json": "test_*.{yaml,yml}"
     }
 }

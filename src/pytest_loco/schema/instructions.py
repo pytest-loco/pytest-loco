@@ -7,16 +7,19 @@ instructions that are registered as PyYAML constructors.
 from collections.abc import Callable
 from typing import ClassVar
 
-from yaml import BaseLoader
-from yaml.nodes import Node
+from yaml import Loader, SafeLoader
+from yaml.nodes import MappingNode, ScalarNode
 
 from pytest_loco.models import SchemaModel
 from pytest_loco.values import Deferred, RuntimeValue
 
+type YAMLLoader = Loader | SafeLoader
+type YAMLNode = MappingNode | ScalarNode
+
 #: The runner is invoked by the YAML loader during parsing and is
 #: responsible for converting a YAML node into a runtime representation
 #: (for example, an AST node, a step object, or a primitive value).
-type InstructionRunner = Callable[[BaseLoader, Node], Deferred[RuntimeValue]]
+type InstructionRunner = Callable[[YAMLLoader, YAMLNode], Deferred[RuntimeValue]]
 
 
 class BaseInstruction(SchemaModel):
@@ -33,7 +36,7 @@ class BaseInstruction(SchemaModel):
     #: Callable implementing the instruction execution logic.
     runner: ClassVar[InstructionRunner]
 
-    def __call__(self, loader: BaseLoader, node: Node) -> Deferred[RuntimeValue]:
+    def __call__(self, loader: YAMLLoader, node: YAMLNode) -> Deferred[RuntimeValue]:
         """Invoke the instruction runner.
 
         This method is called by PyYAML when the instruction is registered

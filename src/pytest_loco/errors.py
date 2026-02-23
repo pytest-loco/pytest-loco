@@ -151,7 +151,7 @@ class ErrorFormatter:
         """
         indent = cls._ensure_indent(indent)
 
-        if (error := context.get('error')) and isinstance(error, MarkedYAMLError):
+        if (error := context.get('error')) and isinstance(error, MarkedYAMLError) and error.problem_mark:
             snippet = error.problem_mark.get_snippet(indent=0) or ''
             return cls._make_indent(snippet, indent)
 
@@ -388,10 +388,23 @@ class DSLSchemaError(DSLError):
         Returns:
             DSLSchemaError representing the YAML parsing failure.
         """
+        filename = None
+        line = None
+        column = None
+
+        if error.problem_mark:
+            filename = error.problem_mark.name
+            line = error.problem_mark.line
+            column = error.problem_mark.column
+        elif error.context_mark:
+            filename = error.context_mark.name
+            line = error.context_mark.line
+            column = error.context_mark.column
+
         error_context = ErrorContext(
-            filename=error.problem_mark.name,
-            line_num=error.problem_mark.line,
-            column_num=error.problem_mark.column,
+            filename=filename,
+            line_num=line,
+            column_num=column,
             error=error,
         )
 

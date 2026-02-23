@@ -74,7 +74,7 @@ def pytest_configure(config: 'Config') -> None:
     Args:
         config: Pytest configuration object.
     """
-    loader = SafeLoader
+    loader: type[Loader | SafeLoader] = SafeLoader
     if config.getoption('--loco-unsafe-yaml'):
         loader = Loader
 

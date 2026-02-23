@@ -10,7 +10,7 @@ from .actions import ActionRunner, BaseAction, IncludeAction
 from .cases import Case, Template
 from .checks import BaseCheck, CheckRunner
 from .contents import BaseContent, ContentRunner
-from .instructions import BaseInstruction, InstructionRunner
+from .instructions import BaseInstruction, InstructionRunner, YAMLLoader, YAMLNode
 
 __all__ = (
     'ActionRunner',
@@ -24,4 +24,6 @@ __all__ = (
     'IncludeAction',
     'InstructionRunner',
     'Template',
+    'YAMLLoader',
+    'YAMLNode',
 )
