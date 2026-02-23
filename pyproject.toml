@@ -1,6 +1,6 @@
 [project]
 name = "pytest-loco"
-version = "1.3.3"
+version = "1.3.4"
 description = "Another one YAML-based DSL for testing"
 classifiers = [
     "Development Status :: 3 - Alpha",
@@ -29,6 +29,7 @@ dependencies = [
 
 [project.urls]
 "Source" = "https://github.com/pytest-loco/pytest-loco"
+"Documentation" = "https://pytest-loco.readthedocs.io/en/latest/"
 "Issues" = "https://github.com/pytest-loco/pytest-loco/issues"
 
 [project.entry-points.pytest11]
