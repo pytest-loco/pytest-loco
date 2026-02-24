@@ -84,9 +84,16 @@ class SchemaModel(BaseModel):
             if field_name in required:
                 required.discard(field_name)
 
-        return {
+        object_schema = {
             **schema,
             'required': sorted(required),
+        }
+
+        if not requirements:
+            return object_schema
+
+        return {
+            **object_schema,
             'oneOf': [
                 *schema.get('oneOf', ()),
                 *requirements,
