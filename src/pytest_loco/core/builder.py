@@ -121,7 +121,7 @@ class ExtensionsBuilderMixin:
         Returns:
             RootModel wrapping a union of all checks, or None if no checks are provided.
         """
-        if not checks:
+        if not checks:  # pragma: no cover
             return None
 
         return create_model(
@@ -178,7 +178,7 @@ class ExtensionsBuilderMixin:
                 or None if no executable steps are available.
         """
         step = cls.build_actions(actions, check_model=cls.build_checks(checks))
-        if not step:
+        if not step:  # pragma: no cover
             return None
 
         return create_model(

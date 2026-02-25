@@ -113,7 +113,7 @@ class InputDefinition(SchemaModel):
         if not self.required or self.default is None:
             return self
 
-        raise ValueError('specified both a default value and a required constraint')
+        raise ValueError('Specified both a default value and a required constraint')
 
     @model_validator(mode='after')
     def check_secret_type(self) -> Self:
@@ -131,7 +131,7 @@ class InputDefinition(SchemaModel):
         if not self.secret or self.value_type == 'str':
             return self
 
-        raise ValueError('specified secret on non-string type')
+        raise ValueError('Specified secret on non-string type')
 
 
 class BaseInputsDefinition(RootModel[list[InputDefinition]]):
@@ -270,14 +270,14 @@ class EnvironmentMixin(SchemaModel):
             DSLSchemaError: If the environment definition exists but
                 fails validation or cannot be instantiated.
         """
-        if not self.environment:
+        if not self.environment or not self.environment.root:
             return {}
 
         environment_model = self.environment.build()
         try:
             environment = environment_model()
         except ValidationError as base:
-            raise DSLRuntimeError('can not get required environment params') from base
+            raise DSLRuntimeError('Can not get required environment params') from base
 
         return environment.model_dump()
 
@@ -316,10 +316,10 @@ class ParametersMixin(SchemaModel):
         Raises:
             DSLRuntimeError: If parameters validation fails.
         """
-        if not all((self.params, values)):
+        if not self.params or not self.params.root:
             return {}
 
         try:
             return self.params.build().model_validate(values).model_dump()
         except ValidationError as base:
-            raise DSLRuntimeError('can not get required params') from base
+            raise DSLRuntimeError('Can not get required params') from base

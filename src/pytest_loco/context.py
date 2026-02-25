@@ -25,15 +25,15 @@ class ContextDict(dict[str, Value]):
 
     @overload
     def resolve[T: Value](self, value: 'Mapping[str, Deferred[T]]') -> 'Mapping[str, T]':
-        ...
+        ...  # pragma: no cover
 
     @overload
     def resolve[T: Value](self, value: 'Sequence[Deferred[T]]') -> 'Sequence[T]':
-        ...
+        ...  # pragma: no cover
 
     @overload
     def resolve[T: Value](self, value: Deferred[T]) -> T | None:
-        ...
+        ...  # pragma: no cover
 
 
     def resolve(self, value: Any) -> Any:

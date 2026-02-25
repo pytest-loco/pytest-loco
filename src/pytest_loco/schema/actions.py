@@ -122,6 +122,7 @@ class BaseAction(ContextMixin, DescribedMixin, SchemaModel):
         )
 
         return {
+            **locals_,
             self.output: normalize(result),
         }
 

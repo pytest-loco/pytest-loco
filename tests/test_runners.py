@@ -46,7 +46,9 @@ def test_base_action_runner() -> None:
         'name': VariableLookup('userName'),
     })
 
-    assert instance({'userName': 'Alice'}) == {'result': 'Hello, Alice!'}
+    context = instance({'userName': 'Alice'})
+
+    assert context['result'] == 'Hello, Alice!'
 
 
 @pytest.mark.parametrize('var, pattern, invert, except_value', (
@@ -107,4 +109,6 @@ def test_declarative_action_runner() -> None:
         'username': VariableLookup('userName'),
     })
 
-    assert instance({'userName': 'Alice'}) == {'result': 'Hello, Alice!'}
+    context = instance({'userName': 'Alice'})
+
+    assert context['result'] == 'Hello, Alice!'

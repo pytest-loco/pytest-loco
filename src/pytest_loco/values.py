@@ -54,7 +54,7 @@ def _normalize_key(value: RuntimeValue) -> str:
         TypeError: If the provided key is not a string.
     """
     if not isinstance(value, str):
-        raise TypeError(f'can not use {value!r} as mapping key')
+        raise TypeError(f'Can not use {value!r} as mapping key')
 
     return value
 

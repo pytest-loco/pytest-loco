@@ -7,7 +7,14 @@ from typing import TYPE_CHECKING, get_args
 import pydantic
 import pytest
 
-from pytest_loco.schema.inputs import EnvironmentDefinition, InputDefinition, ParametersDefinition
+from pytest_loco.errors import DSLRuntimeError
+from pytest_loco.schema.inputs import (
+    EnvironmentDefinition,
+    EnvironmentMixin,
+    InputDefinition,
+    ParametersDefinition,
+    ParametersMixin,
+)
 
 if TYPE_CHECKING:
     from re import Pattern
@@ -49,6 +56,8 @@ def test_input_definition_name(name: str, except_message: 'Pattern | None') -> N
     pytest.param('int', None, id='integer type'),
     pytest.param('float', None, id='float type'),
     pytest.param('bool', None, id='bool type'),
+    pytest.param('object', None, id='dict type'),
+    pytest.param('list', None, id='list type'),
     pytest.param('number', r'^1 validation error', id='unsupported type'),
     pytest.param('', r'^1 validation error', id='empty'),
 ))
@@ -126,6 +135,8 @@ def test_environment_definition_default(value: str | None, mocker: 'MockerFixtur
     pytest.param('int', int, False, id='integer type'),
     pytest.param('float', float, False, id='float type'),
     pytest.param('bool', bool, False, id='bool type'),
+    pytest.param('object', dict, False, id='dict type'),
+    pytest.param('list', list, False, id='list type'),
 ))
 def test_environment_definition_types(value_type: str, model_type: type,
                                       secret: bool, mocker: 'MockerFixture') -> None:
@@ -198,6 +209,8 @@ def test_environment_definition_secret(mocker: 'MockerFixture') -> None:
     pytest.param('int', r'1 validation error', id='integer type'),
     pytest.param('float', r'1 validation error', id='float type'),
     pytest.param('bool', r'1 validation error', id='bool type'),
+    pytest.param('object', r'1 validation error', id='dict type'),
+    pytest.param('list', r'1 validation error', id='list type'),
 ))
 def test_environment_definition_secret_type(value_type: str, except_message: 'Pattern | None',
                                             mocker: 'MockerFixture') -> None:
@@ -264,3 +277,63 @@ def test_parameters_definition_required(value: str | None, except_message: 'Patt
     model_instance = model(**data)
 
     assert value == model_instance.value  # type: ignore
+
+
+def test_envs_mixin_resolver(mocker: 'MockerFixture') -> None:
+    """Test EnvironmentMixin resolver for some contexts."""
+    mocker.patch.dict(os.environ, {'TEST_VAR': 'test value'})
+
+    context_model = EnvironmentMixin.model_validate({'envs': [{'name': 'TEST_VAR'}]})
+
+    actual_value = context_model.resolve_environment()
+    assert actual_value == {'TEST_VAR': 'test value'}
+
+
+def test_envs_mixin_empty_resolver(mocker: 'MockerFixture') -> None:
+    """Test EnvironmentMixin resolver for empty contexts."""
+    mocker.patch.dict(os.environ, {'TEST_VAR': 'test value'})
+
+    context_model = EnvironmentMixin.model_validate({})
+
+    actual_value = context_model.resolve_environment()
+    assert actual_value == {}
+
+
+def test_envs_mixin_resolver_errors(mocker: 'MockerFixture') -> None:
+    """Test EnvironmentMixin resolver raises errors for missing required variables."""
+    mocker.patch.dict(os.environ, {})
+
+    context_model = EnvironmentMixin.model_validate({'envs': [{
+        'name': 'TEST_VAR',
+        'required': True,
+    }]})
+
+    with pytest.raises(DSLRuntimeError, match=r'^Can not get required environment params$'):
+        context_model.resolve_environment()
+
+
+def test_params_mixin_resolver() -> None:
+    """Test ParametersMixin resolver for some contexts."""
+    context_model = ParametersMixin.model_validate({'params': [{'name': 'testParam'}]})
+
+    actual_value = context_model.resolve_parameters({'testParam': 'test value'})
+    assert actual_value == {'testParam': 'test value'}
+
+
+def test_params_mixin_empty_resolver() -> None:
+    """Test ParametersMixin resolver for empty contexts."""
+    context_model = ParametersMixin.model_validate({})
+
+    actual_value = context_model.resolve_parameters({})
+    assert actual_value == {}
+
+
+def test_params_mixin_resolver_errors() -> None:
+    """Test ParametersMixin resolver raises errors for missing required parameters."""
+    context_model = ParametersMixin.model_validate({'params': [{
+        'name': 'testParam',
+        'required': True,
+    }]})
+
+    with pytest.raises(DSLRuntimeError, match=r'^Can not get required params$'):
+        context_model.resolve_parameters({})

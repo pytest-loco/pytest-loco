@@ -5,7 +5,10 @@ from typing import TYPE_CHECKING
 import pydantic
 import pytest
 
+from pytest_loco.jsonschema import SchemaGenerator
+from pytest_loco.models import SchemaModel
 from pytest_loco.schema import BaseAction, Case, Template
+from pytest_loco.values import Deferred
 
 if TYPE_CHECKING:
     from re import Pattern
@@ -262,3 +265,197 @@ def test_document_root_model(kind: type, content: dict) -> None:
     document = Document.model_validate(content)
 
     assert isinstance(document.root, kind)
+
+
+def test_aliases_extension_required() -> None:
+    """Test that `x-aliases` extension generate required updates."""
+    schema = (
+        pydantic.create_model(
+            'TestModel',
+            __base__=SchemaModel,
+            test=(str, pydantic.Field(
+                json_schema_extra={
+                    'x-aliases': ['test', 'testField'],
+                },
+            )),
+        )
+        .model_json_schema(
+            schema_generator=SchemaGenerator,
+        )
+    )
+
+    assert schema == {
+        'additionalProperties': False,
+        'oneOf': [
+            {'not': {'anyOf': [{'required': ['testField']}]}, 'required': ['test']},
+            {'not': {'anyOf': [{'required': ['test']}]}, 'required': ['testField']},
+        ],
+        'properties': {
+            'test': {
+                'title': 'Test',
+                'type': 'string',
+                'x-aliases': ['test', 'testField'],
+            },
+            'testField': {
+                'title': 'Test',
+                'type': 'string',
+                'x-aliases': ['test', 'testField'],
+            },
+        },
+        'title': 'TestModel',
+        'type': 'object',
+    }
+
+
+def test_aliases_extension_optional() -> None:
+    """Test that `x-aliases` extension not generate optional updates."""
+    schema = (
+        pydantic.create_model(
+            'TestModel',
+            __base__=SchemaModel,
+            test1=(str, ...),
+            test2=(str | None, pydantic.Field(
+                default=None,
+                json_schema_extra={
+                    'x-aliases': ['test2', 'testField'],
+                },
+            )),
+        )
+        .model_json_schema(
+            schema_generator=SchemaGenerator,
+        )
+    )
+
+    assert schema == {
+        'additionalProperties': False,
+        'properties': {
+            'test1': {
+                'title': 'Test1',
+                'type': 'string',
+            },
+            'test2': {
+                'anyOf': [{'type': 'string'}, {'type': 'null'}],
+                'default': None,
+                'title': 'Test2',
+                'x-aliases': ['test2', 'testField'],
+            },
+            'testField': {
+                'anyOf': [{'type': 'string'}, {'type': 'null'}],
+                'default': None,
+                'title': 'Test2',
+                'x-aliases': ['test2', 'testField'],
+            },
+        },
+        'required': ['test1'],
+        'title': 'TestModel',
+        'type': 'object',
+    }
+
+
+def test_aliases_extension_empty() -> None:
+    """Test that `x-aliases` extension not generate on empty aliases."""
+    schema = (
+        pydantic.create_model(
+            'TestModel',
+            __base__=SchemaModel,
+            test=(str | None, pydantic.Field(
+                default=None,
+            )),
+        )
+        .model_json_schema(
+            schema_generator=SchemaGenerator,
+        )
+    )
+
+    assert schema == {
+        'additionalProperties': False,
+        'properties': {
+            'test': {
+                'anyOf': [{'type': 'string'}, {'type': 'null'}],
+                'default': None,
+                'title': 'Test',
+            },
+        },
+        'title': 'TestModel',
+        'type': 'object',
+    }
+
+
+def test_ref_extension() -> None:
+    """Test that `x-ref` extension generate reference schema."""
+    schema = (
+        pydantic.create_model(
+            'TestModel',
+            __base__=SchemaModel,
+            test=(str | None, pydantic.Field(
+                default=None,
+                json_schema_extra={
+                    'x-ref': 'TestRef',
+                },
+            )),
+        )
+        .model_json_schema(
+            schema_generator=SchemaGenerator,
+        )
+    )
+
+    assert schema == {
+        '$defs': {
+            'TestRef': {
+                'anyOf': [{'type': 'string'}, {'type': 'null'}],
+                'default': None,
+                'x-ref': 'TestRef',
+            },
+        },
+        'additionalProperties': False,
+        'properties': {
+            'test': {'$ref': '#/$defs/TestRef', 'title': 'Test'},
+        },
+        'title': 'TestModel',
+        'type': 'object',
+    }
+
+
+def test_deffered_extension() -> None:
+    """Test that `Deferred` type generate runtime value schema."""
+    schema = (
+        pydantic.create_model(
+            'TestModel',
+            __base__=SchemaModel,
+            test=(Deferred[str], ...),
+        )
+        .model_json_schema(
+            schema_generator=SchemaGenerator,
+        )
+    )
+
+    assert schema == {
+        '$defs': {
+            'DeferredCallable_str_': {
+                'description': 'Runtime value',
+            },
+            'Deferred_str_': {
+                'anyOf': [
+                    {'type': 'string'},
+                    {'$ref': '#/$defs/DeferredCallable_str_'},
+                    {
+                        'items': {'$ref': '#/$defs/Deferred_str_'},
+                        'type': 'array',
+                    },
+                    {
+                        'additionalProperties': {'$ref': '#/$defs/Deferred_str_'},
+                        'type': 'object',
+                    },
+                ],
+            },
+        },
+        'additionalProperties': False,
+        'properties': {
+            'test': {
+                '$ref': '#/$defs/Deferred_str_',
+            },
+        },
+        'required': ['test'],
+        'title': 'TestModel',
+        'type': 'object',
+    }

@@ -183,7 +183,7 @@ def test_variable_resolver_with_invalid_path_type(value: str, except_message: 'P
     """Verify failure of builtin variable resolver on invalid path types."""
     patch_entrypoints()
 
-    DocumentParser(loader)
+    DocumentParser(loader, auto_build=True)
 
     with pytest.raises(DSLSchemaError, match=except_message):
         yaml.load(value, Loader=loader)
@@ -207,7 +207,7 @@ def test_lambda_resolver_default_disabled(patch_entrypoints: 'Callable[..., Mock
     """Evaluate a valid lambda resolver not loaded from YAML if not allowed."""
     patch_entrypoints()
 
-    DocumentParser(loader)
+    DocumentParser(loader, auto_build=True)
 
     with pytest.raises(yaml.error.MarkedYAMLError, match=(r'could not determine a constructor for the tag')):
         yaml.load('!lambda value + 1\n', Loader=loader)
@@ -286,7 +286,7 @@ def test_secret_resolver_with_invalid_path_type(value: str, except_message: 'Pat
     """Verify failure of builtin secret variable resolver on invalid path types."""
     patch_entrypoints()
 
-    DocumentParser(loader)
+    DocumentParser(loader, auto_build=True)
 
     with pytest.raises(DSLSchemaError, match=except_message):
         yaml.load(value, Loader=loader)
@@ -297,7 +297,7 @@ def test_secret_resolver_evaluate(patch_entrypoints: 'Callable[..., MockType]',
     """Evaluate a valid sercret variable resolver loaded from YAML."""
     patch_entrypoints()
 
-    DocumentParser(loader)
+    DocumentParser(loader, auto_build=True)
 
     context = {'value': pydantic.SecretStr('secret')}
 
@@ -597,9 +597,23 @@ def test_invalid_text_file(patch_entrypoints: 'Callable[..., MockType]',
         yaml.load(content, Loader=loader)
 
 
+def test_malformed_text_file_instruction(patch_entrypoints: 'Callable[..., MockType]',
+                                         loader: type[yaml.SafeLoader]) -> None:
+    """Verify an malformed YAML for text file."""
+    patch_entrypoints()
+
+    parser = DocumentParser(loader, auto_attach=False)
+    parser.attach()
+
+    content = '!textFile [test.txt]'
+
+    with pytest.raises(DSLSchemaError, match=r'^Invalid YAML'):
+        yaml.load(content, Loader=loader)
+
+
 def test_valid_binary_file(fs: 'FakeFilesystem',
-                         patch_entrypoints: 'Callable[..., MockType]',
-                         loader: type[yaml.SafeLoader]) -> None:
+                           patch_entrypoints: 'Callable[..., MockType]',
+                           loader: type[yaml.SafeLoader]) -> None:
     """Verify a valid binary data from file."""
     patch_entrypoints()
 
@@ -616,14 +630,28 @@ def test_valid_binary_file(fs: 'FakeFilesystem',
 
 
 def test_invalid_binary_file(patch_entrypoints: 'Callable[..., MockType]',
-                           loader: type[yaml.SafeLoader]) -> None:
+                             loader: type[yaml.SafeLoader]) -> None:
     """Verify an invalid binary file."""
     patch_entrypoints()
 
     parser = DocumentParser(loader, auto_attach=False)
     parser.attach()
 
-    content = '!textFile test.bin'
+    content = '!binaryFile test.bin'
 
     with pytest.raises(DSLRuntimeError, match=r'File not found'):
+        yaml.load(content, Loader=loader)
+
+
+def test_malformed_binary_file_instruction(patch_entrypoints: 'Callable[..., MockType]',
+                                           loader: type[yaml.SafeLoader]) -> None:
+    """Verify an malformed YAML for binary file."""
+    patch_entrypoints()
+
+    parser = DocumentParser(loader, auto_attach=False)
+    parser.attach()
+
+    content = '!binaryFile [test.bin]'
+
+    with pytest.raises(DSLSchemaError, match=r'^Invalid YAML'):
         yaml.load(content, Loader=loader)

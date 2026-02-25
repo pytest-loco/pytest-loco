@@ -11,7 +11,7 @@ scalars, sequences, and mappings.
 
 from contextlib import suppress
 from itertools import product
-from re import IGNORECASE, MULTILINE, UNICODE, search
+from re import IGNORECASE, MULTILINE, UNICODE, findall
 from typing import TYPE_CHECKING
 
 from pytest_loco.errors import DSLRuntimeError
@@ -217,7 +217,9 @@ def _regex(value: 'RuntimeValue', params: 'Mapping[str, RuntimeValue]') -> bool:
     if params.get('multiline'):
         flags |= MULTILINE
 
-    return search(pattern, value, flags) is not None
+    matches = findall(pattern, value, flags)
+
+    return len(matches) > 0
 
 
 eq = Checker(
