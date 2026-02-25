@@ -54,7 +54,7 @@ def test_empty_part_variable_resolver() -> None:
     path = 'obj.lst..1.var'
 
     resolver = VariableLookup(path)
-    resolved = resolver.resolve(context)
+    resolved = resolver(context)
 
     assert resolved is None
 
@@ -65,7 +65,7 @@ def test_undefined_variable_resolver() -> None:
     path = 'obj.lst.1.var'
 
     resolver = VariableLookup(path)
-    resolved = resolver.resolve(context)
+    resolved = resolver(context)
 
     assert resolved is None
 
@@ -76,7 +76,7 @@ def test_scalar_container_variable_resolver() -> None:
     path = 'obj.var.field'
 
     resolver = VariableLookup(path)
-    resolved = resolver.resolve(context)
+    resolved = resolver(context)
 
     assert resolved is None
 
@@ -137,7 +137,7 @@ def test_empty_part_secret_resolver() -> None:
     path = 'obj.lst..1.var'
 
     resolver = SecretLookup(path)
-    resolved = resolver.resolve(context)
+    resolved = resolver(context)
 
     assert resolved is None
 
@@ -148,7 +148,7 @@ def test_undefined_secret_resolver() -> None:
     path = 'obj.lst.1.var'
 
     resolver = SecretLookup(path)
-    resolved = resolver.resolve(context)
+    resolved = resolver(context)
 
     assert resolved is None
 
@@ -160,7 +160,7 @@ def test_simple_value_secret_resolver() -> None:
     path = 'obj.var'
 
     resolver = SecretLookup(path)
-    resolved = resolver.resolve(context)
+    resolved = resolver(context)
 
     assert resolved == expected
 
@@ -178,4 +178,4 @@ def test_malformed_context_lambda_resolver(context: 'Any') -> None:
     resolver = LambdaLookup('var')
 
     with pytest.raises(DSLRuntimeError, match=r'^Invalid context on lambda call$'):
-        resolver.resolve(context)
+        resolver(context)

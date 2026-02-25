@@ -34,6 +34,7 @@ metadata:
 action: test.increment
 title: Test increment with export
 val: !var value
+
 export:
   value: !var result
   resultDict:
@@ -41,43 +42,52 @@ export:
       values:
         - !var result
       status: OK
+
 expect:
-  - title: Result exists
-    value: !var result
-    match: 2
-  - title: Value is changed
-    value: !var value
-    match: 2
-  - title: Result dict status is not ERROR
-    value: !var resultDict.result
-    partialMatch: yes
-    notMatch:
-      result:
-        status: ERROR
-  - title: Result dict values list partially match
-    value: !var resultDict.result.values
-    partialMatch: yes
-    match:
+
+- title: Result exists
+  value: !var result
+  match: 2
+
+- title: Value is changed
+  value: !var value
+  match: 2
+
+- title: Result dict status is not ERROR
+  value: !var resultDict.result
+  partialMatch: yes
+  notMatch:
+    result:
+      status: ERROR
+
+- title: Result dict values list partially match
+  value: !var resultDict.result.values
+  partialMatch: yes
+  match:
+  - 2
+
+- title: Result dict exactly match
+  value: !var resultDict
+  match:
+    result:
+      status: OK
+      values:
       - 2
-  - title: Result dict exactly match
-    value: !var resultDict
-    match:
-      result:
-        values:
-          - 2
-        status: OK
 
 ---
 action: test.increment
 title: Test increment without export
 val: !var value
+
 expect:
-  - title: Result exists
-    value: !var result
-    match: 3
-  - title: Value is unchanged
-    value: !var value
-    notMatch: 3
+
+- title: Result exists
+  value: !var result
+  match: 3
+
+- title: Value is unchanged
+  value: !var value
+  notMatch: 3
 '''
 
 TEST_INCREMET_CASE_OK_CONTENT_WITH_PARAMS = '''
@@ -85,10 +95,10 @@ TEST_INCREMET_CASE_OK_CONTENT_WITH_PARAMS = '''
 spec: case
 title: A test case
 params:
-  - name: value
-    values:
-      - 1
-      - 2
+- name: value
+  values:
+  - 1
+  - 2
 metadata:
   author: Tester
 
@@ -96,32 +106,36 @@ metadata:
 action: test.increment
 title: Test increment with export
 val: !var params.value
-expect:
-  - title: Result more than one
-    value: !var result
-    gt: 1
-  - title: Result less than or equal three
-    value: !var result
-    lte: 3
-  - title: Warm-up 1
-    value:
-      - 1
-      - 2
-      - 3
-      - name: surprise!
-        value: 4
-    partialMatch: yes
-    match:
-      - 2
-      - name: surprise!
-        value: 4
-  - title: Warm-up 2
-    value:
-      status: OK
-    partialMatch: yes
-    notMatch:
-      state: OK
 
+expect:
+
+- title: Result more than one
+  value: !var result
+  gt: 1
+
+- title: Result less than or equal three
+  value: !var result
+  lte: 3
+
+- title: Warm-up 1
+  value:
+  - 1
+  - 2
+  - 3
+  - name: surprise!
+    value: 4
+  partialMatch: yes
+  match:
+  - 2
+  - name: surprise!
+    value: 4
+
+- title: Warm-up 2
+  value:
+    status: OK
+  partialMatch: yes
+  notMatch:
+    state: OK
 '''
 
 TEST_INCREMET_CASE_OK_CONTENT_WITH_ENVS = '''
@@ -129,8 +143,8 @@ TEST_INCREMET_CASE_OK_CONTENT_WITH_ENVS = '''
 spec: case
 title: A test case
 envs:
-  - name: TEST_VAR
-    type: int
+- name: TEST_VAR
+  type: int
 vars:
   value: !var envs.TEST_VAR
 metadata:
@@ -140,10 +154,12 @@ metadata:
 action: test.increment
 title: Test increment with export
 val: !var value
+
 expect:
-  - title: Result more than one
-    value: !var result
-    gt: 1
+
+- title: Result more than one
+  value: !var result
+  gt: 1
 '''
 
 TEST_INCREMET_CASE_OK_CONTENT_WITHOUT_HEADER = '''
@@ -151,27 +167,34 @@ TEST_INCREMET_CASE_OK_CONTENT_WITHOUT_HEADER = '''
 action: test.increment
 title: Test increment with export
 val: 1
+
 export:
   value: !var result
+
 expect:
-  - title: Result exists
-    value: !var result
-    equal: 2
-  - title: Value is changed
-    value: !var value
-    equal: 2
+
+- title: Result exists
+  value: !var result
+  equal: 2
+
+- title: Value is changed
+  value: !var value
+  equal: 2
 
 ---
 action: test.increment
 title: Test increment without export
 val: !var value
+
 expect:
-  - title: Result exists
-    value: !var result
-    equal: 3
-  - title: Value is unchanged
-    value: !var value
-    notEqual: 3
+
+- title: Result exists
+  value: !var result
+  equal: 3
+
+- title: Value is unchanged
+  value: !var value
+  notEqual: 3
 '''
 
 TEST_INCREMET_CASE_FAIL_CONTENT = '''
@@ -187,36 +210,45 @@ metadata:
 action: test.increment
 title: Test increment with export
 val: !var value
+
 export:
   value: !var result
+
 expect:
-  - title: Result exists
-    value: !var result
-    equal: 2
-  - title: Value is changed
-    value: !var value
-    equal: 2
+
+- title: Result exists
+  value: !var result
+  equal: 2
+
+- title: Value is changed
+  value: !var value
+  equal: 2
 
 ---
 action: test.increment
 title: Test how to fail
 val: !var value
+
 export:
   values:
     - !var result
+
 expect:
-  - title: Result exists
-    value: !var result
-    match: 3
-  - title: Must fail here
-    value: !var result
-    partialMatch: yes
-    match:
-      - 5
-      - 2
-  - title: Value is changed
-    value: !var value
-    match: 3
+
+- title: Result exists
+  value: !var result
+  match: 3
+
+- title: Must fail here
+  value: !var result
+  partialMatch: yes
+  match:
+  - 5
+  - 2
+
+- title: Value is changed
+  value: !var value
+  match: 3
 '''
 
 TEST_INCREMET_CASE_FAIL_RUNTIME = '''
@@ -230,30 +262,38 @@ metadata:
 action: test.increment
 title: Test increment with export
 val: !var value
+
 export:
   value: !var result
+
 expect:
-  - title: Result exists
-    value: !var result
-    equal: 2
-  - title: Value is changed
-    value: !var value
-    equal: 2
+
+- title: Result exists
+  value: !var result
+  equal: 2
+
+- title: Value is changed
+  value: !var value
+  equal: 2
 '''
 
 TEST_INVALID_STRUCTURE_CASE_CONTENT = '''
 action: test.increment
 title: Test increment with export
 val: !var value
+
 export:
   value: !var result
+
 expect:
-  - title: Result exists
-    value: !var result
-    match: 2
-  - title: Value is changed
-    value: !var value
-    match: 2
+
+- title: Result exists
+  value: !var result
+  match: 2
+
+- title: Value is changed
+  value: !var value
+  match: 2
 
 ---
 spec: case
@@ -267,13 +307,16 @@ metadata:
 action: test.increment
 title: Test increment without export
 val: !var value
+
 expect:
-  - title: Result exists
-    value: !var result
-    match: 3
-  - title: Value is unchanged
-    value: !var value
-    notMatch: 3
+
+- title: Result exists
+  value: !var result
+  match: 3
+
+- title: Value is unchanged
+  value: !var value
+  notMatch: 3
 '''
 
 TEST_INVALID_MODEL_CASE_CONTENT = '''
@@ -287,10 +330,12 @@ metadata:
 ---
 action: test.increment
 title: Test without required action field
+
 expect:
-  - title: Unknown check
-    value: !var result
-    wrong: yes
+
+- title: Unknown check
+  value: !var result
+  wrong: yes
 '''
 
 TEST_INVALID_MODEL_CASE_SPEC = '''
@@ -483,6 +528,45 @@ def test_base_template(fs: 'FakeFilesystem',
 
     with open('test_case.yaml') as content:
         head, steps = parser.parse_file(content, expect='case')
+
+    plan = TestPlan(head, steps, params={}, parser=parser)
+    plan.run_spec()
+
+
+TEST_YAML_ANCHORS = '''
+# Buitin YAML magic within one document
+---
+action: empty
+vars:
+  value: &data
+    status: OK
+    items:
+    - 1
+    - 2
+    - 3
+
+expect:
+
+- title: Checks equals
+  value: !var value
+  match: *data
+
+- title: Checks partial equals with extended
+  value:
+    comment: Not important
+    <<: *data
+  partialMatch: yes
+  match: !var value
+'''
+
+
+def test_anchors(patch_entrypoints: 'Callable[..., MockType]',
+                 loader: 'type[SafeLoader]') -> None:
+    """Test YAML anchors support."""
+    patch_entrypoints()
+
+    parser = DocumentParser(loader, auto_build=True)
+    head, steps = parser.parse_file(TEST_YAML_ANCHORS, expect='case')
 
     plan = TestPlan(head, steps, params={}, parser=parser)
     plan.run_spec()

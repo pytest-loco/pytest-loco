@@ -2,6 +2,7 @@
 
 from typing import TYPE_CHECKING
 
+import pydantic
 import pytest
 import yaml
 
@@ -23,7 +24,7 @@ def test_base_loading(patch_entrypoints: 'Callable[..., MockType]',
     """Verify successful loading of instructions and content types from entrypoints."""
     patch_entrypoints(example)
 
-    DocumentParser(loader)
+    DocumentParser(loader, auto_attach=True, auto_build=True)
 
     contents = '!dump\n  format: json\n  source:\n    message: !fmt "Hello, {userName}!"\n'
     encoder = yaml.load(contents, Loader=loader)
@@ -52,7 +53,7 @@ def test_loading_with_empty_entrypoint(patch_entrypoints: 'Callable[..., MockTyp
     """Verify behavior when plugins provide no instructions or content types."""
     patch_entrypoints(Plugin(name='empty'))
 
-    DocumentParser(loader)
+    DocumentParser(loader, auto_build=True)
 
     contents = '!dump\n  format: json\n  source:\n    message: !fmt "Hello, {userName}!"\n'
     with pytest.raises(yaml.error.MarkedYAMLError, match=r'^could not determine a constructor for the tag \'!dump\''):
@@ -64,7 +65,7 @@ def test_loading_skip_with_failed_entrypoint(patch_entrypoints: 'Callable[..., M
     """Verify skipping of plugins that fail during loading."""
     patch_entrypoints(None, raises=SyntaxError)
     with pytest.warns(PluginWarning, match=r'^Failed to load entrypoint'):
-        DocumentParser(loader)
+        DocumentParser(loader, auto_build=True)
 
 
 def test_loading_fail_with_failed_entrypoint(patch_entrypoints: 'Callable[..., MockType]',
@@ -75,12 +76,38 @@ def test_loading_fail_with_failed_entrypoint(patch_entrypoints: 'Callable[..., M
         DocumentParser(loader, strict=True)
 
 
+def test_loading_skip_with_not_valid_entrypoint(patch_entrypoints: 'Callable[..., MockType]',
+                                                loader: type[yaml.SafeLoader]) -> None:
+    """Verify skipping of plugins that fail validation during loading with strict mode."""
+    try:
+        pydantic.TypeAdapter(int).validate_python('error')
+    except pydantic.ValidationError as exception:
+        error = exception
+
+    patch_entrypoints(None, raises=error)
+    with pytest.warns(PluginWarning, match=r'^Failed to validate entrypoint'):
+        DocumentParser(loader, strict=False)
+
+
+def test_loading_fail_with_not_valid_entrypoint(patch_entrypoints: 'Callable[..., MockType]',
+                                                loader: type[yaml.SafeLoader]) -> None:
+    """Verify failing of plugins that fail validation during loading with strict mode."""
+    try:
+        pydantic.TypeAdapter(int).validate_python('error')
+    except pydantic.ValidationError as exception:
+        error = exception
+
+    patch_entrypoints(None, raises=error)
+    with pytest.raises(PluginError, match=r'^Failed to validate entrypoint'):
+        DocumentParser(loader, strict=True)
+
+
 def test_loading_skip_with_invalid_provider(patch_entrypoints: 'Callable[..., MockType]',
                                             loader: type[yaml.SafeLoader]) -> None:
     """Verify handling of invalid instruction providers."""
     patch_entrypoints({})
     with pytest.warns(PluginWarning, match=r'object is not a plugin$'):
-        DocumentParser(loader)
+        DocumentParser(loader, auto_build=True)
 
 
 def test_loading_fail_with_invalid_provider(patch_entrypoints: 'Callable[..., MockType]',

@@ -5,6 +5,7 @@ It enforces immutability and strict schema validation to guarantee that
 parsed scenarios are deterministic, explicit, and safe to execute.
 """
 
+from copy import deepcopy
 from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -58,9 +59,11 @@ class SchemaModel(BaseModel):
             alias variants if alias definitions are present. Returns `None`
             if no alias expansion is required or if the schema is not an object.
         """
-        properties = schema.get('properties', {})
-        if schema.get('type') != 'object' or not properties:
-            return None
+        object_schema = deepcopy(schema)
+
+        properties = object_schema.get('properties', {})
+        if object_schema.get('type') != 'object' or not properties:
+            return None  # pragma: no cover
 
         aliases = {
             field_name: sorted({
@@ -74,7 +77,7 @@ class SchemaModel(BaseModel):
             return None
 
         requirements = []
-        required = set(schema.get(REQUIRED_FIELD, ()))
+        required = set(object_schema.pop(REQUIRED_FIELD, ()))
 
         for field_name, field_aliases in aliases.items():
             for alias in field_aliases:
@@ -84,10 +87,8 @@ class SchemaModel(BaseModel):
             if field_name in required:
                 required.discard(field_name)
 
-        object_schema = {
-            **schema,
-            'required': sorted(required),
-        }
+        if required:
+            object_schema[REQUIRED_FIELD] = sorted(required)
 
         if not requirements:
             return object_schema
@@ -95,7 +96,7 @@ class SchemaModel(BaseModel):
         return {
             **object_schema,
             'oneOf': [
-                *schema.get('oneOf', ()),
+                *object_schema.get('oneOf', ()),
                 *requirements,
             ],
         }

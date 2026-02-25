@@ -4,6 +4,8 @@ import pytest
 
 from pytest_loco.builtins.lookups import VariableLookup
 from pytest_loco.context import ContextDict
+from pytest_loco.schema.contexts import ContextMixin
+from pytest_loco.values import normalize
 
 
 def test_mapping_context_resolver() -> None:
@@ -71,3 +73,46 @@ def test_usupported_type_context_resolver() -> None:
 
     with pytest.raises(TypeError, match=r'has unsupported type$'):
         resolver.resolve(NewType(20))
+
+
+@pytest.mark.parametrize('isolated', (True, False))
+def test_context_mixin_resolver(isolated: bool) -> None:
+    """Test ContextMixin resolver for some contexts."""
+    local_context = {'localVar': True}
+    global_context = {'globalVar': True}
+
+    expected_value = local_context.copy()
+    if not isolated:
+        expected_value.update(global_context)
+
+    context_model = ContextMixin.model_validate({'vars': local_context})
+
+    actual_value = context_model.resolve_context(global_context, isolate=isolated)
+    assert actual_value == expected_value
+
+
+@pytest.mark.parametrize('isolated', (True, False))
+def test_context_mixin_empty_resolver(isolated: bool) -> None:
+    """Test ContextMixin resolver for empty contexts."""
+    global_context = {'globalVar': True}
+
+    expected_value = {}
+    if not isolated:
+        expected_value.update(global_context)
+
+    context_model = ContextMixin.model_validate({})
+
+    actual_value = context_model.resolve_context(global_context, isolate=isolated)
+    assert actual_value == expected_value
+
+
+def test_non_string_keys_context_resolver() -> None:
+    """Test that non-string keys in context raise an error."""
+    resolver = ContextDict({})
+    with pytest.raises(TypeError, match=r'^Can not use 42 as mapping key$'):
+        resolver.resolve({42: 'value'})
+
+
+def test_none_context_normalize_as_empty() -> None:
+    """Test that `None` is treated as empty context."""
+    assert normalize(lambda ctx: ctx.get('var', 'default'), None) == 'default'

@@ -335,7 +335,7 @@ def text_file_constructor(loader: 'YAMLLoader', node: 'YAMLNode') -> str:
     except DSLError:
         raise
 
-    except Exception as base:
+    except Exception as base:  # pragma: no cover
         raise DSLRuntimeError.from_yaml_node('Invalid text IO', node) from base
 
 
@@ -369,7 +369,7 @@ def binary_file_constructor(loader: 'YAMLLoader', node: 'YAMLNode') -> bytes:
     except DSLError:
         raise
 
-    except Exception as base:
+    except Exception as base:  # pragma: no cover
         raise DSLRuntimeError.from_yaml_node('Invalid binary IO', node) from base
 
 
