@@ -39,7 +39,12 @@ def cli() -> None:
     help='Print the pytest-loco JSON Schema to standard output.',
 )
 def print_schema() -> None:
-    """Generate and print the JSON Schema."""
+    """Generate and print the JSON Schema for pytest-loco DSL.
+
+    Outputs the complete JSON Schema definition for the pytest-loco
+    test scenario format to stdout. This schema describes the structure
+    and validation rules for test scenario files written in pytest-loco.
+    """
     echo(SchemaGenerator.make_schema())
 
 
@@ -57,7 +62,7 @@ def _update_tags(parser: 'DocumentParser', tags: list[str]) -> list[str]:
         tags = []
 
     instructions = (
-        f'!{name} {instruction.node_type}'  # type: ignore[attr-defined]
+        f'!{name} {instruction.node_type}'
         for name, instruction in parser.instructions.items()
     )
 

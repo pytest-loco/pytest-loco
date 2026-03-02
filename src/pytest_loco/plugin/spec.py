@@ -69,7 +69,7 @@ class TestSpec(pytest.File):
 
         yield from self.parametrize(parser, header, steps)  # type: ignore[arg-type]
 
-    def parametrize(self, parser: 'DocumentParser',  header: 'Case | None',
+    def parametrize(self, parser: 'DocumentParser', header: 'Case | None',
                     steps: tuple['BaseAction', ...]) -> 'Iterable[TestCase]':
         """Generate parameterized pytest test cases.
 

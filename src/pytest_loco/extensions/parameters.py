@@ -112,7 +112,19 @@ class Attribute(DescribedMixin, SchemaModel):
     @staticmethod
     def _extend_schema_aliases(schema: dict[str, Any],
                                aliases: AliasChoices | None = None) -> None:
-        """Extends schema aliases."""
+        """Extend schema with alias information.
+
+        Modifies the provided schema dictionary in place to include
+        alias definitions for fields that have aliases configured.
+
+        Args:
+            schema: JSON schema dictionary to modify in place
+            aliases: Optional AliasChoices containing field aliases.
+                If None, no modifications are made.
+
+        Returns:
+            None (modifies schema parameter in place)
+        """
         if not aliases:
             return None
 

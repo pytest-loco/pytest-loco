@@ -171,7 +171,20 @@ def _neq(value: 'RuntimeValue', params: 'Mapping[str, RuntimeValue]') -> bool:
 
 def _cmp(actual: 'RuntimeValue', expected: 'RuntimeValue',
          swap: bool = False, inclusive: bool = False) -> bool:
-    """Base implementation for comparisons."""
+    """Base implementation for comparisons.
+
+    Args:
+        actual: Actual value from execution context
+        expected: Expected value to compare against
+        swap: If True, reverses comparison order
+        inclusive: If True, allows equality in comparison (e.g., <= instead of <)
+
+    Returns:
+        True if comparison passes, False otherwise
+
+    Raises:
+        TypeError: If value types are incompatible for comparison
+    """
     if expected is None or actual is None:
         return actual is expected and inclusive
 

@@ -48,7 +48,7 @@ class VariableLookup:
         self.path = path.strip().split('.')
 
         if not VARIABLE_PATTERN.match(self.path[0]):
-            raise DSLSchemaError('Invalid variable path')
+            raise DSLSchemaError(f'Invalid variable path, must match {VARIABLE_PATTERN!r}')
 
     def __call__(self, context: dict[str, 'RuntimeValue']) -> 'RuntimeValue':
         """Resolve the variable path against a context."""

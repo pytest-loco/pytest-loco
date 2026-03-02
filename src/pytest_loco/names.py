@@ -37,7 +37,7 @@ Action = Annotated[
         title='Action identifier',
         description=(
             'Name of the action executed by a scenario step. '
-            'An action may be specified either as a bultins name '
+            'An action may be specified either as a builtins name '
             '(for example, `debug`) or as a plugin-qualified name '
             'using dot notation (for example, `http.get`). '
             'Action identifiers are limited to ASCII letters, '
