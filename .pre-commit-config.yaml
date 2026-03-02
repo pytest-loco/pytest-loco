@@ -19,10 +19,15 @@ repos:
         args: [ --config-file=./pyproject.toml ]
         additional_dependencies:
           - click
+          - colorama
           - pydantic
           - pydantic-settings
+          - pygments
           - pytest
+          - pyyaml
           - types-click
+          - types-colorama
+          - types-pygments
           - types-pyyaml
   - repo: local
     hooks:

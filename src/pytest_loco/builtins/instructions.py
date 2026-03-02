@@ -64,7 +64,7 @@ def variable_constructor(loader: 'YAMLLoader', node: 'YAMLNode') -> VariableLook
         return VariableLookup(path=loader.construct_scalar(node))
 
     except MarkedYAMLError as base:
-        raise DSLSchemaError.from_yaml_error(base) from base
+        raise DSLSchemaError.from_yaml_error(base, node) from base
 
     except Exception as base:
         raise DSLSchemaError.from_yaml_node('Invalid variable path', node) from base
@@ -91,7 +91,7 @@ def secret_constructor(loader: 'YAMLLoader', node: 'YAMLNode') -> SecretLookup:
         return SecretLookup(path=loader.construct_scalar(node))
 
     except MarkedYAMLError as base:
-        raise DSLSchemaError.from_yaml_error(base) from base
+        raise DSLSchemaError.from_yaml_error(base, node) from base
 
     except Exception as base:
         raise DSLSchemaError.from_yaml_node('Invalid secret variable path', node) from base
@@ -122,7 +122,7 @@ def lambda_constructor(loader: 'YAMLLoader', node: 'YAMLNode') -> LambdaLookup:
         return LambdaLookup(body=loader.construct_scalar(node))
 
     except MarkedYAMLError as base:
-        raise DSLSchemaError.from_yaml_error(base) from base
+        raise DSLSchemaError.from_yaml_error(base, node) from base
 
     except Exception as base:
         raise DSLSchemaError.from_yaml_node('Invalid syntax for lambda body', node) from base
@@ -148,7 +148,7 @@ def date_constructor(loader: 'YAMLLoader', node: 'YAMLNode') -> date:
         return date.fromisoformat(loader.construct_scalar(node))
 
     except MarkedYAMLError as base:
-        raise DSLSchemaError.from_yaml_error(base) from base
+        raise DSLSchemaError.from_yaml_error(base, node) from base
 
     except Exception as base:
         raise DSLSchemaError.from_yaml_node('Invalid date format', node) from base
@@ -174,7 +174,7 @@ def datetime_constructor(loader: 'YAMLLoader', node: 'YAMLNode') -> datetime:
         return datetime.fromisoformat(loader.construct_scalar(node))
 
     except MarkedYAMLError as base:
-        raise DSLSchemaError.from_yaml_error(base) from base
+        raise DSLSchemaError.from_yaml_error(base, node) from base
 
     except Exception as base:
         raise DSLSchemaError.from_yaml_node('Invalid datetime format', node) from base
@@ -200,7 +200,7 @@ def timedelta_constructor(loader: 'YAMLLoader', node: 'YAMLNode') -> timedelta:
         return timedelta(seconds=float(loader.construct_scalar(node)))
 
     except MarkedYAMLError as base:
-        raise DSLSchemaError.from_yaml_error(base) from base
+        raise DSLSchemaError.from_yaml_error(base, node) from base
 
     except Exception as base:
         raise DSLSchemaError.from_yaml_node('Invalid timedelta format', node) from base
@@ -235,7 +235,7 @@ def duration_constructor(loader: 'YAMLLoader', node: 'YAMLNode') -> timedelta:
         return timedelta(seconds=value * unit)
 
     except MarkedYAMLError as base:
-        raise DSLSchemaError.from_yaml_error(base) from base
+        raise DSLSchemaError.from_yaml_error(base, node) from base
 
     except Exception as base:
         raise DSLSchemaError.from_yaml_node('Invalid duration value', node) from base
@@ -269,7 +269,7 @@ def base64_constructor(loader: 'YAMLLoader', node: 'YAMLNode') -> bytes:
         return b64decode(value, validate=True)
 
     except MarkedYAMLError as base:
-        raise DSLSchemaError.from_yaml_error(base) from base
+        raise DSLSchemaError.from_yaml_error(base, node) from base
 
     except Exception as base:
         raise DSLSchemaError.from_yaml_node('Invalid base64-encoded value', node) from base
@@ -299,7 +299,7 @@ def binary_hex_constructor(loader: 'YAMLLoader', node: 'YAMLNode') -> bytes:
         return bytes.fromhex(value)
 
     except MarkedYAMLError as base:
-        raise DSLSchemaError.from_yaml_error(base) from base
+        raise DSLSchemaError.from_yaml_error(base, node) from base
 
     except Exception as base:
         raise DSLSchemaError.from_yaml_node('Invalid hexadecimal-encoded value', node) from base
@@ -330,7 +330,7 @@ def text_file_constructor(loader: 'YAMLLoader', node: 'YAMLNode') -> str:
         return file_.read_text()
 
     except MarkedYAMLError as base:
-        raise DSLSchemaError.from_yaml_error(base) from base
+        raise DSLSchemaError.from_yaml_error(base, node) from base
 
     except DSLError:
         raise
@@ -364,7 +364,7 @@ def binary_file_constructor(loader: 'YAMLLoader', node: 'YAMLNode') -> bytes:
         return file_.read_bytes()
 
     except MarkedYAMLError as base:
-        raise DSLSchemaError.from_yaml_error(base) from base
+        raise DSLSchemaError.from_yaml_error(base, node) from base
 
     except DSLError:
         raise
