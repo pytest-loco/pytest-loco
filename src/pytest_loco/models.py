@@ -103,7 +103,7 @@ class SchemaModel(BaseModel):
 
     @staticmethod
     def _alias_requirements(aliases: list[str], alias: str) -> 'JsonSchemaValue':
-        """Iterate over generated alias requrements.
+        """Iterate over generated alias requirements.
 
         Args:
             aliases: A list of aliases available for field.
@@ -111,7 +111,7 @@ class SchemaModel(BaseModel):
 
         Returns:
             A generated JSON schema containing a definition with
-            alias and its exlusions list.
+            alias and its exclusions list.
         """
         index = aliases.index(alias)
 

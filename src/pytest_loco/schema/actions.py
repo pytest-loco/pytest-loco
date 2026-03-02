@@ -99,11 +99,11 @@ class BaseAction(ContextMixin, DescribedMixin, SchemaModel):
         and stores the produced result under the configured output name.
 
         Args:
-            context: Current execution context.
+            context: Local context variables available to the action.
 
         Returns:
-            A mapping containing a single entry with the action result
-            context stored under the configured output variable name.
+            Mapping of values produced by the action runner under the
+            configured output name.
         """
         locals_ = ContextDict(
             self.resolve_context(context),

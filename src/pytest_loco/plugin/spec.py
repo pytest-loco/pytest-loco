@@ -16,12 +16,16 @@ from typing import TYPE_CHECKING
 
 import pytest
 
+from pytest_loco.errors import WRAP_VERBOSITY_LIMIT, DSLError
+
 from .case import TestCase
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
+    from typing import Any
 
 if TYPE_CHECKING:
+    from pytest_loco.core import DocumentParser
     from pytest_loco.schema import BaseAction, Case
     from pytest_loco.values import Value
 
@@ -56,12 +60,16 @@ class TestSpec(pytest.File):
             ValueError: If the DSL document is malformed and the parser
                 operates in strict mode.
         """
+        parser: DocumentParser | None = getattr(self.config, 'loco_parser', None)
+        if not parser:
+            return
+
         with self.path.open('rt', encoding='utf-8') as content:
-            header, steps = self.config.loco_parser.parse_file(content, expect='case')  # type: ignore[attr-defined]
+            header, steps = parser.parse_file(content, expect='case')
 
-        yield from self.parametrize(header, steps)
+        yield from self.parametrize(parser, header, steps)  # type: ignore[arg-type]
 
-    def parametrize(self, header: 'Case | None',
+    def parametrize(self, parser: 'DocumentParser', header: 'Case | None',
                     steps: tuple['BaseAction', ...]) -> 'Iterable[TestCase]':
         """Generate parameterized pytest test cases.
 
@@ -70,20 +78,25 @@ class TestSpec(pytest.File):
         combination of parameter values.
 
         Args:
+            parser: DSL document parser.
             header: Validated DSL case header with declared parameters.
             steps: Tuple of validated DSL steps to execute.
 
         Yields:
             `TestCase` instances parameterized with concrete values.
         """
-        for values in self.prepare_params(header):
+        for i, values in enumerate(self.prepare_params(header)):
+            name = self.path.stem
+            if values:
+                name = f'{name}[combination={i}]'
+
             yield TestCase.from_parent(
                 self,
-                name=self.path.stem,
                 header=header,
                 steps=steps,
                 params=values,
-                parser=self.config.loco_parser,  # type: ignore[attr-defined]
+                name=name,
+                parser=parser,
             )
 
     @staticmethod
@@ -99,9 +112,36 @@ class TestSpec(pytest.File):
         Returns:
             Combinations tuple of params.
         """
-        if not header or not header.params:
-            yield {}
-        else:
-            names = tuple(param.name for param in header.params)
-            for values in product(*(param.values for param in header.params)):
-                yield dict(zip(names, values, strict=True))
+        params = getattr(header, 'params', ())
+
+        names = tuple(param.name for param in params)
+        for values in product(*(param.values for param in params)):
+            yield dict(zip(names, values, strict=True))
+
+    def repr_failure(self, excinfo: pytest.ExceptionInfo[BaseException],
+                     style: 'Any' = None) -> 'Any':  # noqa: ANN401
+        """Return a representation of a collection failure.
+
+        Args:
+            excinfo: Exception information for the failure.
+            style: Traceback style.
+
+        Returns:
+            String or terminal representation for the error.
+        """
+        if not style:
+            style = self.config.getoption('tbstyle', 'auto')
+            if style == 'auto':
+                style = 'short'
+
+        verbosity = self.config.get_verbosity()
+
+        if verbosity < WRAP_VERBOSITY_LIMIT and isinstance(excinfo.value, DSLError):
+            if excinfo.value.context and not excinfo.value.context.get('filename'):
+                excinfo.value.context['filename'] = self.path.as_posix()
+            isatty = False
+            if reporter := self.config.pluginmanager.get_plugin('terminalreporter'):
+                isatty = bool(reporter.isatty)
+            return excinfo.value.repr(isatty, verbosity)
+
+        return super().repr_failure(excinfo)

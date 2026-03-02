@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 import pytest
 
 from pytest_loco.core import DocumentParser
-from pytest_loco.errors import DSLRuntimeError, DSLSchemaError
+from pytest_loco.errors import DSLFailure, DSLRuntimeError, DSLSchemaError
 from pytest_loco.extensions import Actor, Attribute, Plugin, Schema
 from pytest_loco.plugin.case import TestPlan
 from pytest_loco.plugin.spec import TestSpec
@@ -393,7 +393,7 @@ def test_parse_and_run(content: str, expect_message: 'Pattern | None',
     ]
 
     if expect_message is not None:
-        with pytest.raises(AssertionError, match=expect_message):
+        with pytest.raises(DSLFailure, match=expect_message):
             [plan.run_spec() for plan in plans]
         return None
 
@@ -423,9 +423,9 @@ def test_parse_on_invalid_structure(patch_entrypoints: 'Callable[..., MockType]'
 
 
 @pytest.mark.parametrize('content, expect_message', (
-    pytest.param(TEST_INVALID_MODEL_CASE_SPEC, r'^Input should be \'case\'', id='invalid spec'),
-    pytest.param(TEST_INVALID_MODEL_CASE_CONTENT, r'^Extra inputs are not permitted', id='extra fields'),
-    pytest.param(TEST_INVALID_MODEL_DOCUMENT, r'^Type validation error', id='invalid type'),
+    pytest.param(TEST_INVALID_MODEL_CASE_SPEC, r'^Invalid entity', id='invalid spec'),
+    pytest.param(TEST_INVALID_MODEL_CASE_CONTENT, r'^Invalid entity', id='extra fields'),
+    pytest.param(TEST_INVALID_MODEL_DOCUMENT, r'^Wrong entity type', id='invalid type'),
     pytest.param(TEST_INVALID_MODEL_YAML, r'^Invalid YAML', id='invalid yaml'),
 ))
 def test_parse_on_invalid_schema(content: str, expect_message: 'Pattern',

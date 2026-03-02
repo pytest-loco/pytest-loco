@@ -13,11 +13,12 @@ from typing import TYPE_CHECKING
 import pytest
 
 from pytest_loco.context import ContextDict
-from pytest_loco.errors import DSLError, DSLRuntimeError, ErrorContext
+from pytest_loco.errors import WRAP_VERBOSITY_LIMIT, DSLError, DSLFailure, DSLRuntimeError, ErrorContext
 from pytest_loco.schema.actions import IncludeAction
 
 if TYPE_CHECKING:
     from collections.abc import Callable
+    from os import PathLike
     from typing import Any
 
 if TYPE_CHECKING:
@@ -219,12 +220,18 @@ class TestPlan:
                         raise AssertionError
 
                 except AssertionError as base:
-                    raise self.fail(
-                        check,
-                        locals_,
+                    raise self.fail(check, ErrorContext(
+                        filename=self.filename,
                         step_num=step_num,
                         check_num=check_num,
-                    ) from base
+                        context=locals_,
+                        error=base,
+                        element=check.model_dump(
+                            exclude_defaults=False,
+                            exclude_none=True,
+                            exclude_unset=True,
+                        ),
+                    )) from base
 
             globals_.update(exports)
 
@@ -269,36 +276,21 @@ class TestPlan:
         return f'{self.parent.path}'
 
     def fail(self, check: 'BaseCheck',
-             context: dict[str, 'Value'],
-             step_num: int | None = None,
-             check_num: int | None = None) -> AssertionError:
-        """Create an AssertionError enriched with DSL context.
+             error: ErrorContext | None = None) -> DSLFailure:
+        """Create an DSLFailure enriched with DSL context.
 
         Args:
             check: Expectation that failed.
-            context: Execution context at failure time.
-            step_num: Index of the step.
-            check_num: Index of the expectation.
+            error: Error context at failure time.
 
         Returns:
-            AssertionError with formatted DSL error message.
+            DSLFailure with message and context.
         """
-        error_context = ErrorContext(
-            filename=self.filename,
-            step_num=step_num,
-            check_num=check_num,
-            context=context,
-            element=check.model_dump(
-                exclude_none=True,
-                exclude_unset=True,
-            ),
-        )
-
         message = 'Expectation fail'
         if check.title:
             message += f': {check.title}'
 
-        return AssertionError(DSLError.format(message, error_context))
+        return DSLFailure(message, context=error)
 
 
 class TestCase(pytest.Item):
@@ -338,3 +330,35 @@ class TestCase(pytest.Item):
     def runtest(self) -> None:
         """Execute the DSL test case."""
         self.plan.run_spec()
+
+    def reportinfo(self) -> tuple['PathLike[str] | str', int | None, str]:
+        """Get location information for this item for test reports.
+
+        Returns:
+            A tuple with three elements:
+            - The path of the test (default ``self.path``)
+            - The 0-based line number of the test (default ``None``)
+            - A name of the test to be shown (default ``""``)
+        """
+        return self.path, None, self.name
+
+    def repr_failure(self, excinfo: pytest.ExceptionInfo[BaseException],
+                     style: 'Any' = None) -> 'Any':  # noqa: ANN401
+        """Return a representation of a collection or test failure.
+
+        Args:
+            excinfo: Exception information for the failure.
+            style: Traceback style.
+
+        Returns:
+            String or terminal representation for the error.
+        """
+        verbosity = self.config.get_verbosity()
+
+        if verbosity < WRAP_VERBOSITY_LIMIT and isinstance(excinfo.value, DSLError):
+            isatty = False
+            if reporter := self.config.pluginmanager.get_plugin('terminalreporter'):
+                isatty = bool(reporter.isatty)
+            return excinfo.value.repr(isatty, verbosity)
+
+        return super().repr_failure(excinfo, style)

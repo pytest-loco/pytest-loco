@@ -10,22 +10,21 @@ automatically collected and parsed into pytest test items.
 """
 
 from re import match
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
+from pytest import UsageError
 from yaml import Loader, SafeLoader
+
+from pytest_loco.core import DocumentParser
+from pytest_loco.errors import DSLBuildError
 
 from .spec import TestSpec
 
 if TYPE_CHECKING:
     from pathlib import Path
 
-if TYPE_CHECKING:
-    from _pytest.config import Config
-    from _pytest.config.argparsing import Parser
-    from _pytest.nodes import Node
 
-
-def pytest_addoption(parser: 'Parser') -> None:
+def pytest_addoption(parser: Any) -> None:  # noqa: ANN401
     """Register pytest command-line options for pytest-loco.
 
     Args:
@@ -65,7 +64,7 @@ def pytest_addoption(parser: 'Parser') -> None:
     )
 
 
-def pytest_configure(config: 'Config') -> None:
+def pytest_configure(config: Any) -> None:  # noqa: ANN401
     """Configure pytest-loco integration.
 
     This hook initializes a shared `DocumentParser` instance and
@@ -78,17 +77,19 @@ def pytest_configure(config: 'Config') -> None:
     if config.getoption('--loco-unsafe-yaml'):
         loader = Loader
 
-    from pytest_loco.core import DocumentParser  # noqa: PLC0415
+    try:
+        config.loco_parser = DocumentParser(
+            loader,
+            allow_lambda=config.getoption('--loco-allow-lambda', default=False),
+            strict=not config.getoption('--loco-relaxed', default=False),
+            auto_build=True,
+        )
 
-    config.loco_parser = DocumentParser(  # type: ignore[attr-defined]
-        loader,
-        allow_lambda=config.getoption('--loco-allow-lambda', default=False),
-        strict=not config.getoption('--loco-relaxed', default=False),
-        auto_build=True,
-    )
+    except DSLBuildError as error:
+        raise UsageError('Can not load the `pytest-loco` plugins.') from error
 
 
-def pytest_collect_file(parent: 'Node', file_path: 'Path') -> TestSpec | None:
+def pytest_collect_file(parent: Any, file_path: 'Path') -> TestSpec | None:  # noqa: ANN401
     """Collect YAML DSL specification files.
 
     Files matching the pattern `test_*.yml` or `test_*.yaml` are treated
@@ -102,9 +103,6 @@ def pytest_collect_file(parent: 'Node', file_path: 'Path') -> TestSpec | None:
         A `TestSpec` collector if the file matches the DSL pattern, otherwise ``None``.
     """
     if match(r'^test_.+\.ya?ml$', file_path.name):
-        return TestSpec.from_parent(
-            parent,
-            path=file_path,
-        )
+        return TestSpec.from_parent(parent, path=file_path)
 
     return None

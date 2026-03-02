@@ -50,7 +50,7 @@ files = [
     {file = "colorama-0.4.6-py2.py3-none-any.whl", hash = "sha256:4f1d9991f5acc0ca119f9d443620b77f9d6b33703e51011c16baf57afb285fc6"},
     {file = "colorama-0.4.6.tar.gz", hash = "sha256:08695f5cb7ed6e0531a20572697297273c47b8cae5a63ffc6d6ed5c201be6e44"},
 ]
-markers = {main = "platform_system == \"Windows\" or sys_platform == \"win32\"", test = "sys_platform == \"win32\""}
+markers = {test = "sys_platform == \"win32\""}
 
 [[package]]
 name = "coverage"
@@ -200,26 +200,26 @@ testing = ["hatch", "pre-commit", "pytest", "tox"]
 
 [[package]]
 name = "filelock"
-version = "3.24.3"
+version = "3.25.0"
 description = "A platform independent file lock."
 optional = false
 python-versions = ">=3.10"
 groups = ["dev"]
 files = [
-    {file = "filelock-3.24.3-py3-none-any.whl", hash = "sha256:426e9a4660391f7f8a810d71b0555bce9008b0a1cc342ab1f6947d37639e002d"},
-    {file = "filelock-3.24.3.tar.gz", hash = "sha256:011a5644dc937c22699943ebbfc46e969cdde3e171470a6e40b9533e5a72affa"},
+    {file = "filelock-3.25.0-py3-none-any.whl", hash = "sha256:5ccf8069f7948f494968fc0713c10e5c182a9c9d9eef3a636307a20c2490f047"},
+    {file = "filelock-3.25.0.tar.gz", hash = "sha256:8f00faf3abf9dc730a1ffe9c354ae5c04e079ab7d3a683b7c32da5dd05f26af3"},
 ]
 
 [[package]]
 name = "identify"
-version = "2.6.16"
+version = "2.6.17"
 description = "File identification library for Python"
 optional = false
 python-versions = ">=3.10"
 groups = ["dev"]
 files = [
-    {file = "identify-2.6.16-py2.py3-none-any.whl", hash = "sha256:391ee4d77741d994189522896270b787aed8670389bfd60f326d677d64a6dfb0"},
-    {file = "identify-2.6.16.tar.gz", hash = "sha256:846857203b5511bbe94d5a352a48ef2359532bc8f6727b5544077a0dcfb24980"},
+    {file = "identify-2.6.17-py2.py3-none-any.whl", hash = "sha256:be5f8412d5ed4b20f2bd41a65f920990bdccaa6a4a18a08f1eefdcd0bdd885f0"},
+    {file = "identify-2.6.17.tar.gz", hash = "sha256:f816b0b596b204c9fdf076ded172322f2723cf958d02f9c3587504834c8ff04d"},
 ]
 
 [package.extras]
@@ -840,14 +840,14 @@ yaml = ["pyyaml (>=6.0.1)"]
 
 [[package]]
 name = "pyfakefs"
-version = "6.1.2"
+version = "6.1.3"
 description = "Implements a fake file system that mocks the Python file system modules."
 optional = false
 python-versions = ">=3.10"
 groups = ["test"]
 files = [
-    {file = "pyfakefs-6.1.2-py3-none-any.whl", hash = "sha256:f3bb5fa720b8418f5f6d5fdc15f011efbe0ef36fa9f389eadd764c5f67677971"},
-    {file = "pyfakefs-6.1.2.tar.gz", hash = "sha256:9d01641b3f65bcfc4872b5f5c8bc57f4253e4b035aaea63c57ed901c9f2e0213"},
+    {file = "pyfakefs-6.1.3-py3-none-any.whl", hash = "sha256:8bf5fa4637ab7749891435c419f155be70fa0341e34b67b0a8a0364cd5e2249d"},
+    {file = "pyfakefs-6.1.3.tar.gz", hash = "sha256:8368ecd2bcdd126362b8900b26dd543afe881d5c396892dcb86e4dc561a39f0f"},
 ]
 
 [package.extras]
@@ -950,15 +950,35 @@ setproctitle = ["setproctitle"]
 testing = ["filelock"]
 
 [[package]]
+name = "python-discovery"
+version = "1.1.0"
+description = "Python interpreter discovery"
+optional = false
+python-versions = ">=3.8"
+groups = ["dev"]
+files = [
+    {file = "python_discovery-1.1.0-py3-none-any.whl", hash = "sha256:a162893b8809727f54594a99ad2179d2ede4bf953e12d4c7abc3cc9cdbd1437b"},
+    {file = "python_discovery-1.1.0.tar.gz", hash = "sha256:447941ba1aed8cc2ab7ee3cb91be5fc137c5bdbb05b7e6ea62fbdcb66e50b268"},
+]
+
+[package.dependencies]
+filelock = ">=3.15.4"
+platformdirs = ">=4.3.6,<5"
+
+[package.extras]
+docs = ["furo (>=2025.12.19)", "sphinx (>=9.1)", "sphinx-autodoc-typehints (>=3.6.3)", "sphinxcontrib-mermaid (>=2)"]
+testing = ["covdefaults (>=2.3)", "coverage (>=7.5.4)", "pytest (>=8.3.5)", "pytest-mock (>=3.14)", "setuptools (>=75.1)"]
+
+[[package]]
 name = "python-dotenv"
-version = "1.2.1"
+version = "1.2.2"
 description = "Read key-value pairs from a .env file and set them as environment variables"
 optional = false
-python-versions = ">=3.9"
+python-versions = ">=3.10"
 groups = ["main"]
 files = [
-    {file = "python_dotenv-1.2.1-py3-none-any.whl", hash = "sha256:b81ee9561e9ca4004139c6cbba3a238c32b03e4894671e181b671e8cb8425d61"},
-    {file = "python_dotenv-1.2.1.tar.gz", hash = "sha256:42667e897e16ab0d66954af0e60a9caa94f0fd4ecf3aaf6d2d260eec1aa36ad6"},
+    {file = "python_dotenv-1.2.2-py3-none-any.whl", hash = "sha256:1d8214789a24de455a8b8bd8ae6fe3c6b69a5e3d64aa8a8e5d68e694bbcb285a"},
+    {file = "python_dotenv-1.2.2.tar.gz", hash = "sha256:2c371a91fbd7ba082c2c1dc1f8bf89ca22564a087c2c287cd9b662adde799cf3"},
 ]
 
 [package.extras]
@@ -1110,6 +1130,45 @@ files = [
 ]
 
 [[package]]
+name = "types-colorama"
+version = "0.4.15.20250801"
+description = "Typing stubs for colorama"
+optional = false
+python-versions = ">=3.9"
+groups = ["dev"]
+files = [
+    {file = "types_colorama-0.4.15.20250801-py3-none-any.whl", hash = "sha256:b6e89bd3b250fdad13a8b6a465c933f4a5afe485ea2e2f104d739be50b13eea9"},
+    {file = "types_colorama-0.4.15.20250801.tar.gz", hash = "sha256:02565d13d68963d12237d3f330f5ecd622a3179f7b5b14ee7f16146270c357f5"},
+]
+
+[[package]]
+name = "types-docutils"
+version = "0.22.3.20260223"
+description = "Typing stubs for docutils"
+optional = false
+python-versions = ">=3.10"
+groups = ["dev"]
+files = [
+    {file = "types_docutils-0.22.3.20260223-py3-none-any.whl", hash = "sha256:cc2d6b7560a28e351903db0989091474aa619ad287843a018324baee9c4d9a8f"},
+    {file = "types_docutils-0.22.3.20260223.tar.gz", hash = "sha256:e90e868da82df615ea2217cf36dff31f09660daa15fc0f956af53f89c1364501"},
+]
+
+[[package]]
+name = "types-pygments"
+version = "2.19.0.20251121"
+description = "Typing stubs for Pygments"
+optional = false
+python-versions = ">=3.9"
+groups = ["dev"]
+files = [
+    {file = "types_pygments-2.19.0.20251121-py3-none-any.whl", hash = "sha256:cb3bfde34eb75b984c98fb733ce4f795213bd3378f855c32e75b49318371bb25"},
+    {file = "types_pygments-2.19.0.20251121.tar.gz", hash = "sha256:eef114fde2ef6265365522045eac0f8354978a566852f69e75c531f0553822b1"},
+]
+
+[package.dependencies]
+types-docutils = "*"
+
+[[package]]
 name = "types-pyyaml"
 version = "6.0.12.20250915"
 description = "Typing stubs for PyYAML"
@@ -1150,22 +1209,23 @@ typing-extensions = ">=4.12.0"
 
 [[package]]
 name = "virtualenv"
-version = "20.39.0"
+version = "21.1.0"
 description = "Virtual Python Environment builder"
 optional = false
 python-versions = ">=3.8"
 groups = ["dev"]
 files = [
-    {file = "virtualenv-20.39.0-py3-none-any.whl", hash = "sha256:44888bba3775990a152ea1f73f8e5f566d49f11bbd1de61d426fd7732770043e"},
-    {file = "virtualenv-20.39.0.tar.gz", hash = "sha256:a15f0cebd00d50074fd336a169d53422436a12dfe15149efec7072cfe817df8b"},
+    {file = "virtualenv-21.1.0-py3-none-any.whl", hash = "sha256:164f5e14c5587d170cf98e60378eb91ea35bf037be313811905d3a24ea33cc07"},
+    {file = "virtualenv-21.1.0.tar.gz", hash = "sha256:1990a0188c8f16b6b9cf65c9183049007375b26aad415514d377ccacf1e4fb44"},
 ]
 
 [package.dependencies]
 distlib = ">=0.3.7,<1"
 filelock = {version = ">=3.24.2,<4", markers = "python_version >= \"3.10\""}
 platformdirs = ">=3.9.1,<5"
+python-discovery = ">=1"
 
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.13,<4"
-content-hash = "bdf2607b24cdb25d2a62d1426da130c85fd573cbabc7b216d6108de747034ca4"
+content-hash = "2b49bcce76b91b268c3277c4e00f8fd689ea8cf0e5ad2f4b21a54b42dddaac79"

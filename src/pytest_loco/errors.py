@@ -5,31 +5,32 @@ to report plugin loading issues, DSL schema and model construction
 failures, and runtime execution errors in a structured and extensible way.
 """
 
-from os import linesep
-from typing import TYPE_CHECKING, Any, TypedDict
+from os import linesep, path
+from typing import TYPE_CHECKING, Any, Literal, TypedDict
 
 from pydantic import BaseModel  # noqa: TC002
-from yaml import dump
-from yaml.error import MarkedYAMLError
+from yaml import dump, serialize
 
-from pytest_loco.values import MAPPINGS, SCALARS, SEQUENCES
+from pytest_loco.io import TerminalStr, TerminalWriter
+from pytest_loco.values import normalize
 
 if TYPE_CHECKING:
     from importlib.metadata import EntryPoint
     from typing import Self
 
 if TYPE_CHECKING:
-    from pydantic_core import ErrorDetails, ValidationError
+    from pydantic_core import ValidationError
+    from yaml.error import MarkedYAMLError
     from yaml.nodes import Node
 
 if TYPE_CHECKING:
     from pytest_loco.values import Value
 
-SNIPPET_ELLIPSIS = f' ...{linesep}'
-SNIPPET_SEPARATOR = f' ---{linesep}'
+
+WRAP_VERBOSITY_LIMIT = 4
+
 SNIPPET_INDENT = 2
 
-FORMAT_REPLACER = '<runtime object>'
 FORMAT_FILENAME = '<unicode string>'
 FORMAT_INDENT = 4
 
@@ -62,6 +63,8 @@ class ErrorContext(TypedDict, total=False):
 
     #: Runtime context values available at the moment of failure.
     context: dict[str, Any] | None
+    #: Runtime source.
+    source: str | None
     #: Runtime element associated with the error.
     element: Any
 
@@ -75,8 +78,11 @@ class ErrorFormatter:
     """
 
     @classmethod
-    def format(cls, message: str, context: ErrorContext | None = None) -> str:
-        """Format an error message using contextual information.
+    def with_longrepr(cls, message: str,
+                      context: ErrorContext | None = None,
+                      isatty: bool = False,
+                      verbosity: int = 0) -> TerminalStr:
+        """Extend a message string with formatted long representation.
 
         This method combines a base message with optional location
         metadata and a YAML snippet describing the failing element
@@ -85,22 +91,44 @@ class ErrorFormatter:
         Args:
             message: Base human-readable error message.
             context: Optional error context with location and data.
+            isatty: Is a TTY.
+            verbosity: Verbosity level.
 
         Returns:
-            A fully formatted error message suitable for display.
+            A `TerminalStr` with fully formatted error message suitable for display.
         """
-        if not context:
-            return message
+        writer = TerminalWriter(isatty)
 
-        message += linesep
-        message += cls.get_location_string(context, indent=FORMAT_INDENT)
-        message += cls.get_snippet_string(context, indent=FORMAT_INDENT * 2)
+        if context:
+            writer.write(cls.get_location_string(context), bold=True, red=True)
+            writer.line(f' {cls.__name__}')
+            writer.write(linesep)
 
-        return message
+            if verbosity > 1 and (locals_snippet := cls.get_snippet(context, 'context')):
+                writer.line('Locals:')
+                writer.source(locals_snippet)
+                writer.write(linesep)
+
+            if source := context.get('source'):
+                if verbosity > 1:
+                    writer.line('Source:')
+                writer.source(cls._make_indent(source, ' ' * FORMAT_INDENT))
+                writer.write(linesep)
+            elif source_snippet := cls.get_snippet(context, 'element'):
+                if verbosity > 1:
+                    writer.line('Source:')
+                writer.source(source_snippet)
+                writer.write(linesep)
+
+        writer.lines(message)
+
+        output = TerminalStr(message)
+        setattr(output, 'toterminal', lambda tw: tw.write(writer.content()))  # noqa: B010
+
+        return output
 
     @classmethod
-    def get_location_string(cls, context: ErrorContext, *,
-                            indent: str | int | None = None) -> str:
+    def get_location_string(cls, context: ErrorContext) -> str:
         """Format source and execution location information.
 
         Args:
@@ -111,126 +139,60 @@ class ErrorFormatter:
             A formatted location string including filename, line,
             column, step, and expectation numbers when available.
         """
-        indent = cls._ensure_indent(indent)
-
         filename = context.get('filename')
         if not filename:
             filename = FORMAT_FILENAME
 
-        message = f'{indent}in "{filename}"'
+        message = (
+            path.relpath(filename)
+            .replace('\\', '/')
+        )
+
         if (line_num := context.get('line_num')) is not None:
             line_num += 1
-            message += f', line {line_num}'
+            message += f':{line_num}'
             if (column_num := context.get('column_num')) is not None:
                 column_num += 1
-                message += f', column {column_num}'
-        message += linesep
+                message += f':{column_num}'
 
-        if (step_num := context.get('step_num')) is not None:
-            step_num += 1
-            message += f'{indent}on step {step_num}'
-            if (check_num := context.get('check_num')) is not None:
-                check_num += 1
-                message += f', expectation {check_num}'
-            message += linesep
+        message += ':'
 
         return message
 
     @classmethod
-    def get_snippet_string(cls, context: ErrorContext, *,
-                           indent: str | int | None = None) -> str:
-        """Generate a formatted snippet illustrating the error context.
+    def get_snippet(cls, context: ErrorContext,
+                    field: Literal['context', 'element']) -> str:
+        """Return a YAML-formatted snippet for a given context field.
+
+        The method normalizes the provided value and converts it into
+        a formatted YAML block suitable for terminal display.
 
         Args:
-            context: Error context containing model or exception data.
-            indent: Optional indentation (string or number of spaces).
+            context: Error context containing runtime metadata.
+            field: Either "context" for runtime locals or "element" for DSL element data.
 
         Returns:
-            A formatted multi-line snippet string, or an empty string
-            if no snippet data is available.
+            A formatted YAML snippet or an empty string if no data is available.
         """
-        indent = cls._ensure_indent(indent)
-
-        if (error := context.get('error')) and isinstance(error, MarkedYAMLError) and error.problem_mark:
-            snippet = error.problem_mark.get_snippet(indent=0) or ''
-            return cls._make_indent(snippet, indent)
-
-        if element := context.get('element'):
-            return cls._make_snippet(element, context, indent)
+        if value := context.get(field):
+            node = normalize(value, context.get('context'))
+            return cls._make_snippet(node, ' ' * FORMAT_INDENT)
 
         return ''
 
     @classmethod
-    def _make_snippet(cls, element: dict[str, Any],
-                      context: ErrorContext, indent: str) -> str:
-        """Build a YAML-based snippet for an element.
+    def _make_snippet(cls, element: Any, indent: str) -> str:  # noqa: ANN401
+        """Serialize an element to YAML and apply indentation.
 
         Args:
-            element: Element associated with the error.
-            context: Error context containing optional runtime values.
-            indent: String indentation prefix.
+            element: DSL element or runtime data structure.
+            indent: Indentation prefix applied to each non-empty line.
 
         Returns:
-            A formatted snippet string including context and model data.
-        """
-        snippet = f'{indent}{SNIPPET_ELLIPSIS}'
-
-        if values := context.get('context'):
-            snippet += cls._make_yaml({'context': {**values}}, indent)
-            snippet += linesep
-            snippet += f'{indent}{SNIPPET_SEPARATOR}'
-
-        snippet += cls._make_yaml(element, indent)
-        snippet += linesep
-
-        return snippet
-
-    @classmethod
-    def _filter_unsafe(cls, value: Any) -> Any:  # noqa: ANN401
-        """Recursively sanitize values for safe YAML serialization.
-
-        Non-scalar and non-container objects are replaced with
-        a placeholder to prevent leaking executable or opaque data.
-
-        Args:
-            value: Arbitrary value to sanitize.
-
-        Returns:
-            A YAML-safe representation of the value.
-        """
-        if value is None or isinstance(value, SCALARS):
-            return value
-
-        if isinstance(value, MAPPINGS):
-            return type(value)({
-                key: cls._filter_unsafe(item)
-                for key, item in value.items()
-            })
-
-        if isinstance(value, SEQUENCES):
-            return type(value)(
-                cls._filter_unsafe(item)
-                for item in value
-            )
-
-        return FORMAT_REPLACER
-
-    @classmethod
-    def _make_yaml(cls, value: Any, indent: str = '') -> str:  # noqa: ANN401
-        """"Serialize a value to a YAML-formatted string.
-
-        The value is first sanitized to remove unsafe or non-serializable
-        objects and then rendered as YAML with stable formatting.
-
-        Args:
-            value: Arbitrary value to serialize.
-            indent: Optional indentation prefix.
-
-        Returns:
-            A YAML-formatted string representation of the value.
+            A formatted YAML snippet string.
         """
         data = dump(
-            cls._filter_unsafe(value),
+            element,
             indent=SNIPPET_INDENT,
             sort_keys=False,
         )
@@ -258,24 +220,6 @@ class ErrorFormatter:
             for line in value.splitlines()
             if line.strip()
         )
-
-    @staticmethod
-    def _ensure_indent(indent: str | int | None = None) -> str:
-        """Normalize indentation input.
-
-        Args:
-            indent: Indentation as string or number of spaces.
-
-        Returns:
-            A string consisting of spaces or the provided string.
-        """
-        if isinstance(indent, int) and indent > 0:
-            return ' ' * indent
-
-        if isinstance(indent, str):
-            return indent
-
-        return ''
 
 
 class PluginWarning(UserWarning):
@@ -307,9 +251,22 @@ class DSLError(Exception, ErrorFormatter):
 
         super().__init__(message)
 
-    def __str__(self) -> str:
-        """String represenatation."""
-        return self.format(self.message, self.context)
+    def repr(self, isatty: bool = False, verbosity: int = 0) -> str:
+        """Return formatted error representation.
+
+        Args:
+            isatty: Whether output supports ANSI markup.
+            verbosity: Verbosity level controlling snippet inclusion.
+
+        Returns:
+            A formatted terminal-ready representation of the error.
+        """
+        return self.with_longrepr(
+            self.message,
+            self.context,
+            isatty,
+            verbosity,
+        )
 
     @classmethod
     def from_yaml_node(cls, message: str, node: 'Node',
@@ -331,6 +288,7 @@ class DSLError(Exception, ErrorFormatter):
             filename=node.start_mark.name,
             line_num=node.start_mark.line,
             column_num=node.start_mark.column,
+            source=serialize(node),
             error=error,
         )
 
@@ -375,7 +333,8 @@ class DSLSchemaError(DSLError):
     """
 
     @classmethod
-    def from_yaml_error(cls, error: MarkedYAMLError) -> 'Self':
+    def from_yaml_error(cls, error: 'MarkedYAMLError',
+                        node: 'Node | None' = None) -> 'Self':
         """Create a schema error from a YAML parsing failure.
 
         This method converts a low-level PyYAML error into a DSL-level
@@ -384,6 +343,7 @@ class DSLSchemaError(DSLError):
 
         Args:
             error: Exception raised by the YAML parser.
+            node: YAML node associated with the error.
 
         Returns:
             DSLSchemaError representing the YAML parsing failure.
@@ -401,16 +361,21 @@ class DSLSchemaError(DSLError):
             line = error.context_mark.line
             column = error.context_mark.column
 
+        source = None
+        if node:
+            source = serialize(node)
+
         error_context = ErrorContext(
             filename=filename,
             line_num=line,
             column_num=column,
+            source=source,
             error=error,
         )
 
         message = 'Invalid YAML'
         if error.problem:
-            message += f'{linesep}{' '* FORMAT_INDENT}{error.problem}'
+            message += f': {error.problem}'
 
         return cls(message, context=error_context)
 
@@ -451,66 +416,19 @@ class DSLSchemaError(DSLError):
             element=data,
         )
 
+        entity = 'entity'
+        if check_num is not None:
+            entity = 'expectation'
+
+        message = f'Invalid {entity}'
         if not data or not isinstance(data, dict):
-            return cls('Type validation error', context=error_context)
+            message = f'Wrong {entity} type'
 
-        for item in error.errors(include_url=False, include_input=False):
-            if context := cls._locate_pydantic_context(data, item):
-                message, value = context
-                return cls(message, context=ErrorContext({**error_context, 'element': value}))
+        if step_num is not None:
+            message += f' on {step_num} document'
 
-        return cls('Validation error', context=error_context)
+        return cls(message, context=error_context)
 
-    @classmethod
-    def _locate_pydantic_context(cls, value: 'Any',  # noqa: ANN401
-                                 error: 'ErrorDetails') -> tuple[str, Any] | None:
-        """Locate the most specific failing element in validated data.
-
-        This method walks the Pydantic error location path and attempts
-        to extract the minimal substructure responsible for the failure.
-        The extracted fragment is later used to build a focused YAML
-        snippet for error reporting.
-
-        Args:
-            value: Root data structure being validated.
-            error: Pydantic error details including location path.
-
-        Returns:
-            A tuple of (error message, extracted element) if a relevant
-            context can be located, otherwise None.
-        """
-        container = last_item = value
-        last_key: int | str | None = None
-
-        for key in error['loc']:
-            if isinstance(last_item, (list, tuple)):
-                if isinstance(key, int) and 0 <= key < len(last_item):
-                    container = last_item
-                    last_item = last_item[key]
-                    last_key = key
-            elif isinstance(last_item, dict):
-                if key in last_item:
-                    container = last_item
-                    last_item = last_item[key]
-                    last_key = key
-            else:
-                return None
-
-        message = None
-        if isinstance(last_key, (int, str)):
-            for item in (error.get('msg') or '').splitlines():
-                item_message = item.strip()
-                if item_message:
-                    message = item_message
-                    break
-
-        if message:
-            if isinstance(container, (list, tuple)):
-                return message, [last_item]
-            if isinstance(container, dict):
-                return message, {last_key: last_item}
-
-        return None
 
 class DSLRuntimeError(DSLError):
     """Error raised during DSL execution.
@@ -528,18 +446,19 @@ class DSLRuntimeError(DSLError):
                             check_num: int | None = None) -> 'Self':
         """Create a runtime error from a Pydantic model instance.
 
-        This method converts a Pydantic model into a DSL-level runtime error.
+        The model is converted to a serializable representation
+        and included in the formatted error snippet.
 
         Args:
-            model: A Pydantic model.
-            message: An optional custom message.
-            context: A context dictionary.
-            filename: An optional filename of source.
-            step_num: Position of step.
-            check_num: Position of expectation.
+            model: Pydantic model associated with the failure.
+            message: Optional additional runtime message.
+            context: Runtime values available at failure time.
+            filename: Source filename.
+            step_num: DSL step number.
+            check_num: Expectation index within step.
 
         Returns:
-            DSLRuntimeError representing the validation failure.
+            A DSLRuntimeError instance.
         """
         error_context = ErrorContext(
             filename=filename,
@@ -554,6 +473,15 @@ class DSLRuntimeError(DSLError):
 
         error_message = 'Runtime error'
         if message:
-            error_message += f'{linesep}{' ' * FORMAT_INDENT}{message}'
+            error_message += f': {message}'
 
         return cls(error_message, context=error_context)
+
+
+class DSLFailure(DSLError):
+    """Exception representing a failed DSL expectation.
+
+    This exception is raised when a DSL check evaluates to False
+    and indicates a test failure rather than a structural or
+    runtime error.
+    """

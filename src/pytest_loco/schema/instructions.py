@@ -36,6 +36,9 @@ class BaseInstruction(SchemaModel):
     #: Callable implementing the instruction execution logic.
     runner: ClassVar[InstructionRunner]
 
+    #: Node type for parsing
+    node_type: ClassVar[str] = 'scalar'
+
     def __call__(self, loader: YAMLLoader, node: YAMLNode) -> Deferred[RuntimeValue]:
         """Invoke the instruction runner.
 
