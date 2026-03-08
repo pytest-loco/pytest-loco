@@ -425,7 +425,7 @@ class DSLSchemaError(DSLError):
             message = f'Wrong {entity} type'
 
         if step_num is not None:
-            message += f' on {step_num} document'
+            message += f' on document #{step_num}'
 
         return cls(message, context=error_context)
 
