@@ -10,21 +10,24 @@ automatically collected and parsed into pytest test items.
 """
 
 from re import match
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
-from pytest import UsageError
+from pytest import ExitCode, UsageError
 from yaml import Loader, SafeLoader
 
-from pytest_loco.core import DocumentParser
-from pytest_loco.errors import DSLBuildError
+from pytest_loco.core import PARSER, REPORTER, DocumentParser, ReportAggregator
+from pytest_loco.errors import DSLError, PluginError
 
 from .spec import TestSpec
 
 if TYPE_CHECKING:
     from pathlib import Path
 
+if TYPE_CHECKING:
+    from pytest import Collector, Config, Parser, TerminalReporter
 
-def pytest_addoption(parser: Any) -> None:  # noqa: ANN401
+
+def pytest_addoption(parser: 'Parser') -> None:
     """Register pytest command-line options for pytest-loco.
 
     Args:
@@ -64,7 +67,7 @@ def pytest_addoption(parser: Any) -> None:  # noqa: ANN401
     )
 
 
-def pytest_configure(config: Any) -> None:  # noqa: ANN401
+def pytest_configure(config: 'Config') -> None:
     """Configure pytest-loco integration.
 
     This hook initializes a shared `DocumentParser` instance and
@@ -78,18 +81,21 @@ def pytest_configure(config: Any) -> None:  # noqa: ANN401
         loader = Loader
 
     try:
-        config.loco_parser = DocumentParser(
+        config.stash[PARSER] = DocumentParser(
             loader,
             allow_lambda=config.getoption('--loco-allow-lambda', default=False),
             strict=not config.getoption('--loco-relaxed', default=False),
             auto_build=True,
         )
+        config.stash[REPORTER] = ReportAggregator(
+            strict=not config.getoption('--loco-relaxed', default=False),
+        )
 
-    except DSLBuildError as error:
-        raise UsageError('Can not load the `pytest-loco` plugins.') from error
+    except (DSLError, PluginError) as error:
+        raise UsageError(error) from error
 
 
-def pytest_collect_file(parent: Any, file_path: 'Path') -> TestSpec | None:  # noqa: ANN401
+def pytest_collect_file(parent: 'Collector', file_path: 'Path') -> TestSpec | None:
     """Collect YAML DSL specification files.
 
     Files matching the pattern `test_*.yml` or `test_*.yaml` are treated
@@ -106,3 +112,35 @@ def pytest_collect_file(parent: Any, file_path: 'Path') -> TestSpec | None:  # n
         return TestSpec.from_parent(parent, path=file_path)
 
     return None
+
+
+def pytest_terminal_summary(terminalreporter: 'TerminalReporter',
+                            exitstatus: ExitCode, config: 'Config') -> None:
+    """Adds a custom tests tracing section to the terminal summary report.
+
+    Displays aggregated tracing content and a final execution status only when
+    the verbose mode (-v) is enabled. The data is retrieved from the
+    ReportAggregator stored in the pytest config stash.
+
+    Args:
+        terminalreporter: The internal pytest object used for terminal output.
+        exitstatus: The exit code of the test session (e.g., OK, TESTS_FAILED).
+        config: The pytest config object containing CLI options and stash.
+    """
+    if not config.getoption('verbose') >= 1:
+        return None
+
+    reporter: ReportAggregator = config.stash[REPORTER]
+
+    terminalreporter.section('tests tracing')
+
+    content = reporter.totals.get_content(terminalreporter.isatty())
+    if content:
+        terminalreporter.write_raw(content)
+        terminalreporter.write_line('')
+        if exitstatus != ExitCode.OK:
+            terminalreporter.write_line('Tests failed', red=True)
+        else:
+            terminalreporter.write_line('Tests passed', green=True)
+    else:
+        terminalreporter.write_line('No data', red=True)

@@ -1,11 +1,13 @@
 """Integration tests for DSL parsing and execution pipeline."""
 
 import os
+from pathlib import Path
+from types import SimpleNamespace
 from typing import TYPE_CHECKING
 
 import pytest
 
-from pytest_loco.core import DocumentParser
+from pytest_loco.core import DocumentParser, ReportAggregator
 from pytest_loco.errors import DSLFailure, DSLRuntimeError, DSLSchemaError
 from pytest_loco.extensions import Actor, Attribute, Plugin, Schema
 from pytest_loco.plugin.case import TestPlan
@@ -387,8 +389,15 @@ def test_parse_and_run(content: str, expect_message: 'Pattern | None',
     parser = DocumentParser(loader)
     head, steps = parser.parse_file(content, expect='case')
 
+    item = SimpleNamespace(
+        parser=parser,
+        reporter=ReportAggregator(),
+        name='test',
+        path=Path('tests/test_example.yaml'),
+    )
+
     plans = [
-        TestPlan(head, steps, params=values)
+        TestPlan(head, steps, values, parent=item)
         for values in TestSpec.prepare_params(head)
     ]
 
@@ -474,8 +483,15 @@ def test_run_on_runtime_error(content: str, expect_message: 'Pattern',
     parser = DocumentParser(loader)
     head, steps = parser.parse_file(content, expect='case')
 
+    item = SimpleNamespace(
+        parser=parser,
+        reporter=ReportAggregator(),
+        name='test',
+        path=Path('tests/test_example.yaml'),
+    )
+
     for values in TestSpec.prepare_params(head):
-        plan = TestPlan(head, steps, params=values)
+        plan = TestPlan(head, steps, values, parent=item)
         with pytest.raises(DSLRuntimeError, match=expect_message):
             plan.run_spec()
 
@@ -529,7 +545,14 @@ def test_base_template(fs: 'FakeFilesystem',
     with open('test_case.yaml') as content:
         head, steps = parser.parse_file(content, expect='case')
 
-    plan = TestPlan(head, steps, params={}, parser=parser)
+    item = SimpleNamespace(
+        parser=parser,
+        reporter=ReportAggregator(),
+        name='test',
+        path=Path('tests/test_example.yaml'),
+    )
+
+    plan = TestPlan(head, steps, {}, parent=item)
     plan.run_spec()
 
 
@@ -568,5 +591,12 @@ def test_anchors(patch_entrypoints: 'Callable[..., MockType]',
     parser = DocumentParser(loader, auto_build=True)
     head, steps = parser.parse_file(TEST_YAML_ANCHORS, expect='case')
 
-    plan = TestPlan(head, steps, params={}, parser=parser)
+    item = SimpleNamespace(
+        parser=parser,
+        reporter=ReportAggregator(),
+        name='test',
+        path=Path('tests/test_example.yaml'),
+    )
+
+    plan = TestPlan(head, steps, {}, parent=item)
     plan.run_spec()

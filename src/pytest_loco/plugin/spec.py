@@ -16,6 +16,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 
+from pytest_loco.core import PARSER
 from pytest_loco.errors import WRAP_VERBOSITY_LIMIT, DSLError
 
 from .case import TestCase
@@ -60,16 +61,13 @@ class TestSpec(pytest.File):
             ValueError: If the DSL document is malformed and the parser
                 operates in strict mode.
         """
-        parser: DocumentParser | None = getattr(self.config, 'loco_parser', None)
-        if not parser:
-            return
-
+        parser: DocumentParser = self.config.stash[PARSER]
         with self.path.open('rt', encoding='utf-8') as content:
             header, steps = parser.parse_file(content, expect='case')
 
-        yield from self.parametrize(parser, header, steps)  # type: ignore[arg-type]
+        yield from self.parametrize(header, steps)  # type: ignore[arg-type]
 
-    def parametrize(self, parser: 'DocumentParser', header: 'Case | None',
+    def parametrize(self, header: 'Case | None',
                     steps: tuple['BaseAction', ...]) -> 'Iterable[TestCase]':
         """Generate parameterized pytest test cases.
 
@@ -96,7 +94,6 @@ class TestSpec(pytest.File):
                 steps=steps,
                 params=values,
                 name=name,
-                parser=parser,
             )
 
     @staticmethod

@@ -13,10 +13,21 @@ a YAML loader, attaches all required constructors, and parses YAML
 document streams into validated executable DSL models.
 """
 
+from pytest import StashKey
+
+from .collector import NodeType, ReportAggregator, ReportCollector
 from .parser import DocumentParser, Header, Step
 
+PARSER = StashKey[DocumentParser]()
+REPORTER = StashKey[ReportAggregator]()
+
 __all__ = (
+    'PARSER',
+    'REPORTER',
     'DocumentParser',
     'Header',
+    'NodeType',
+    'ReportAggregator',
+    'ReportCollector',
     'Step',
 )

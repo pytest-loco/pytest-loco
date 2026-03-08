@@ -13,8 +13,9 @@ from typing import TYPE_CHECKING
 import pytest
 
 from pytest_loco.context import ContextDict
+from pytest_loco.core import PARSER, REPORTER
 from pytest_loco.errors import WRAP_VERBOSITY_LIMIT, DSLError, DSLFailure, DSLRuntimeError, ErrorContext
-from pytest_loco.schema.actions import IncludeAction
+from pytest_loco.schema import Case, IncludeAction
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -25,8 +26,8 @@ if TYPE_CHECKING:
     from pydantic import BaseModel
 
 if TYPE_CHECKING:
-    from pytest_loco.core import DocumentParser, Header, Step
-    from pytest_loco.schema import BaseAction, BaseCheck, Case
+    from pytest_loco.core import DocumentParser, Header, ReportAggregator, Step
+    from pytest_loco.schema import BaseAction, BaseCheck
     from pytest_loco.values import Value
 
 
@@ -42,9 +43,7 @@ class TestPlan:
     __test__ = False
 
     def __init__(self, header: 'Header', steps: tuple['Step', ...],
-                 params: dict[str, 'Value'], *,
-                 parent: pytest.Item | None = None,
-                 parser: 'DocumentParser | None' = None) -> None:
+                 params: dict[str, 'Value'], parent: 'TestCase') -> None:
         """Initialize a test execution plan.
 
         Args:
@@ -52,14 +51,15 @@ class TestPlan:
             steps: Ordered sequence of DSL steps.
             params: Initial parameter context.
             parent: Optional pytest item owning this plan.
-            parser: Parser used to resolve included templates.
         """
         self.header = header
         self.steps = steps
         self.params = params
 
         self.parent = parent
-        self.parser = parser
+
+        self.parser = parent.parser
+        self.reporter = parent.reporter
 
     def run_callable[T: dict[str, Value] | bool](
         self, executor: 'Callable[[], T]', model: 'BaseModel', *,
@@ -124,28 +124,9 @@ class TestPlan:
             step_num=0,
         )
 
-    def run_step(self, step: 'BaseAction', context: dict[str, 'Value'], *,
-                 step_num: int | None = None) -> dict[str, 'Value']:
-        """Execute a single DSL action step.
-
-        Args:
-            step: Action to execute.
-            context: Execution context.
-            step_num: Step index for error reporting.
-
-        Returns:
-            Mapping of values produced by the action.
-        """
-        return self.run_callable(
-            partial(step, context),
-            model=step,
-            context=context,
-            step_num=step_num,
-        )
-
-    def run_check(self, check: 'BaseCheck', context: dict[str, 'Value'], *,
-                  step_num: int | None = None,
-                  check_num: int | None = None) -> bool:
+    def run_check(self, check: 'BaseCheck',
+                  context: dict[str, 'Value'],
+                  step_num: int, check_num: int) -> bool:
         """Evaluate a single DSL expectation.
 
         Args:
@@ -157,13 +138,109 @@ class TestPlan:
         Returns:
             Boolean result of the expectation.
         """
-        return self.run_callable(
-            partial(check, context),
-            model=check,
+        self.reporter.enter_node(
+            'check',
+            title=check.title or f'Check {step_num + 1}.{check_num + 1}',
+            description=check.description,
             context=context,
-            step_num=step_num,
-            check_num=check_num,
         )
+
+        try:
+            result = self.run_callable(
+                partial(check, context),
+                model=check,
+                context=context,
+                step_num=step_num,
+                check_num=check_num,
+            )
+
+        except Exception as error:
+            self.reporter.exit_node('check', error=error)
+            raise
+        else:
+            self.reporter.exit_node('check')
+
+        return result
+
+    def run_checks(self, step: 'BaseAction',
+                   context: dict[str, 'Value'],
+                   step_num: int) -> None:
+        """Execute checks from DSL action step.
+
+        Args:
+            step: Action to execute.
+            context: Execution context.
+            step_num: Step index for error reporting.
+        """
+        for check_num, _check in enumerate(step.expect):
+            check = _check.root
+            try:
+                check_result = self.run_check(
+                    check,
+                    context,
+                    step_num=step_num,
+                    check_num=check_num,
+                )
+                if check_result is False:
+                    raise AssertionError
+
+            except AssertionError as base:
+                raise self.fail(check, ErrorContext(
+                    filename=self.filename,
+                    step_num=step_num,
+                    check_num=check_num,
+                    context=context,
+                    error=base,
+                    element=check.model_dump(
+                        exclude_defaults=False,
+                        exclude_none=True,
+                        exclude_unset=True,
+                    ),
+                )) from base
+
+    def run_step(self, step: 'BaseAction',
+                 context: dict[str, 'Value'],
+                 step_num: int) -> dict[str, 'Value']:
+        """Execute a single DSL action step.
+
+        Args:
+            step: Action to execute.
+            context: Execution context.
+            step_num: Step index for error reporting.
+
+        Returns:
+            Mapping of values produced by the action.
+        """
+        locals_ = ContextDict(deepcopy(context))
+
+        results = self.run_callable(
+            partial(step, locals_),
+            model=step,
+            context=locals_,
+            step_num=step_num,
+        )
+
+        if isinstance(step, IncludeAction):
+            results = self.include(step, results)
+
+        locals_.update(results)
+
+        exports: dict[str, Value] = self.run_callable(
+            partial(locals_.resolve, step.export),  # type: ignore[arg-type]
+            step,
+            context=locals_,
+            step_num=step_num,
+        )
+
+        locals_.update(exports)
+
+        self.run_checks(
+            step,
+            locals_,
+            step_num=step_num,
+        )
+
+        return exports
 
     def run_spec(self) -> dict[str, 'Value']:
         """Execute the full DSL specification.
@@ -185,55 +262,25 @@ class TestPlan:
         globals_ = self.run_header()
 
         for step_num, step in enumerate(self.steps):
-            locals_ = ContextDict(deepcopy(globals_))
-
-            results = self.run_step(
-                step,
-                locals_,
-                step_num=step_num,
+            self.reporter.enter_node(
+                'step',
+                title=step.title or f'Step {step_num + 1}',
+                description=step.description,
+                context=globals_,
             )
 
-            if isinstance(step, IncludeAction):
-                results = self.include(step, results)
+            try:
+                globals_.update(self.run_step(
+                    step,
+                    globals_,
+                    step_num=step_num,
+                ))
 
-            locals_.update(results)
-
-            exports: dict[str, Value] = self.run_callable(
-                partial(locals_.resolve, step.export),  # type: ignore[arg-type]
-                step,
-                context=locals_,
-                step_num=step_num,
-            )
-
-            locals_.update(exports)
-
-            for check_num, _check in enumerate(step.expect):
-                check = _check.root
-                try:
-                    check_result = self.run_check(
-                        check,
-                        locals_,
-                        step_num=step_num,
-                        check_num=check_num,
-                    )
-                    if check_result is False:
-                        raise AssertionError
-
-                except AssertionError as base:
-                    raise self.fail(check, ErrorContext(
-                        filename=self.filename,
-                        step_num=step_num,
-                        check_num=check_num,
-                        context=locals_,
-                        error=base,
-                        element=check.model_dump(
-                            exclude_defaults=False,
-                            exclude_none=True,
-                            exclude_unset=True,
-                        ),
-                    )) from base
-
-            globals_.update(exports)
+            except Exception as error:
+                self.reporter.exit_node('step', error=error)
+                raise
+            else:
+                self.reporter.exit_node('step')
 
         return globals_
 
@@ -251,21 +298,37 @@ class TestPlan:
             AssertionError: If any expectation fails.
             DSLRuntimeError: If parser is missing or template execution fails.
         """
-        if not self.parser:
-            raise DSLRuntimeError('missing parser')
-
         with step.filepath.open('rt', encoding='utf-8') as content:
             header, steps = self.parser.parse_file(content, expect='template')
 
-        subplan = TestPlan(
-            header,
-            steps,
-            context,
-            parent=self.parent,
-            parser=self.parser,
+        results = (
+            TestPlan(header, steps, context, parent=self.parent)
+            .run_spec()
         )
 
-        return {step.output: subplan.run_spec()}
+        return {step.output: results}
+
+    def get_report_data(self) -> dict[str, 'Any']:
+        """Get information for this item for test reports.
+
+        Returns:
+            Dictonary of parameters for report collector.
+        """
+        if not self.header:
+            return {'title': self.parent.name}
+
+        metadata = {}
+        if isinstance(self.header, Case):
+            metadata = self.header.metadata
+
+        return {
+            'title': self.header.title or self.parent.name,
+            'description': self.header.description,
+            'metadata': {
+                'params': self.params,
+                **metadata,
+            },
+        }
 
     @property
     def filename(self) -> str:
@@ -306,7 +369,6 @@ class TestCase(pytest.Item):
                  header: 'Case | None',
                  steps:  tuple['BaseAction', ...],
                  params: dict[str, 'Value'],
-                 parser: 'DocumentParser',
                  **kwargs: 'Any') -> None:
         """Initialize a pytest test case backed by a DSL test plan.
 
@@ -314,22 +376,25 @@ class TestCase(pytest.Item):
             header: Optional DSL case header.
             steps: Sequence of DSL steps.
             params: Initial execution parameters.
-            parser: DSL document parser.
             **kwargs: Keyword pytest.Item arguments.
         """
         super().__init__(**kwargs)
 
-        self.plan = TestPlan(
-            header,
-            steps,
-            params,
-            parent=self,
-            parser=parser,
-        )
+        self.parser: DocumentParser = self.config.stash[PARSER]
+        self.reporter: ReportAggregator = self.config.stash[REPORTER]
+
+        self.plan = TestPlan(header, steps, params, parent=self)
 
     def runtest(self) -> None:
         """Execute the DSL test case."""
-        self.plan.run_spec()
+        self.reporter.enter_node('case', **self.plan.get_report_data())
+        try:
+            self.plan.run_spec()
+        except Exception as error:
+            self.reporter.exit_node('case', error=error)
+            raise
+        else:
+            self.reporter.exit_node('case')
 
     def reportinfo(self) -> tuple['PathLike[str] | str', int | None, str]:
         """Get location information for this item for test reports.
