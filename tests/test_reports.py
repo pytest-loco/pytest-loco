@@ -1,5 +1,7 @@
 """Test for reports aggregation."""
 
+from os import linesep
+
 from pytest_loco.core import ReportAggregator
 
 
@@ -38,13 +40,13 @@ def test_report_tracing() -> None:
     reporter.exit_node('case', error=error)
 
     expected = (
-        '+ Test 1\r\n'
-        '  + Step 1.1\r\n'
-        '- Test 2\r\n'
-        '  + Step 2.1\r\n'
-        '  - Step 2.2\r\n'
-        '    + Check 2.2.1\r\n'
-        '    - Check 2.2.2\r\n'
+        f'+ Test 1{linesep}'
+        f'  + Step 1.1{linesep}'
+        f'- Test 2{linesep}'
+        f'  + Step 2.1{linesep}'
+        f'  - Step 2.2{linesep}'
+        f'    + Check 2.2.1{linesep}'
+        f'    - Check 2.2.2{linesep}'
     )
 
     assert expected == reporter.totals.get_content(isatty=False)

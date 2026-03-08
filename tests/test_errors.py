@@ -1,5 +1,6 @@
 """Tests for errors outputs."""
 
+from os import linesep
 from typing import TYPE_CHECKING
 
 import pytest
@@ -41,7 +42,7 @@ def test_error_location(filename: str | None,
         expected = '<unicode string>'
     if line is not None and column is not None:
         expected += f':{line + 1}:{column + 1}'
-    expected += ': ErrorFormatter\r\n\r\nError\r\n'
+    expected += f': ErrorFormatter{linesep}{linesep}Error{linesep}'
 
     value.toterminal(tw)
     tw.write.assert_called_with(expected)
@@ -65,9 +66,9 @@ def test_error_locals(mocker: 'MockerFixture') -> None:
 
     value.toterminal(tw)
     tw.write.assert_called_with(
-        '<unicode string>: ErrorFormatter\r\n\r\n'
-        'Locals:\r\n    test: true\r\n\r\n'
-        'Error\r\n',
+        f'<unicode string>: ErrorFormatter{linesep}{linesep}'
+        f'Locals:{linesep}    test: true{linesep}{linesep}'
+        f'Error{linesep}',
     )
 
 
@@ -89,9 +90,9 @@ def test_error_source(mocker: 'MockerFixture') -> None:
 
     value.toterminal(tw)
     tw.write.assert_called_with(
-        '<unicode string>: ErrorFormatter\r\n\r\n'
-        'Source:\r\n    test: true\r\n\r\n'
-        'Error\r\n',
+        f'<unicode string>: ErrorFormatter{linesep}{linesep}'
+        f'Source:{linesep}    test: true{linesep}{linesep}'
+        f'Error{linesep}',
     )
 
 
@@ -113,9 +114,9 @@ def test_error_element_source(mocker: 'MockerFixture') -> None:
 
     value.toterminal(tw)
     tw.write.assert_called_with(
-        '<unicode string>: ErrorFormatter\r\n\r\n'
-        'Source:\r\n    test: true\r\n\r\n'
-        'Error\r\n',
+        f'<unicode string>: ErrorFormatter{linesep}{linesep}'
+        f'Source:{linesep}    test: true{linesep}{linesep}'
+        f'Error{linesep}',
     )
 
 
@@ -140,9 +141,9 @@ def test_error_markup(mocker: 'MockerFixture') -> None:
 
     value.toterminal(tw)
     tw.write.assert_called_with(
-        '\x1b[1m\x1b[31mtest.yaml:1:1:\x1b[0m ErrorFormatter\r\n\r\n'
-        'Source:\r\n\x1b[0m\x1b[90m    '
+        f'\x1b[1m\x1b[31mtest.yaml:1:1:\x1b[0m ErrorFormatter{linesep}{linesep}'
+        f'Source:{linesep}\x1b[0m\x1b[90m    '
         '\x1b[39;49;00m\x1b[94mtest\x1b[39;49;00m:\x1b[90m '
-        '\x1b[39;49;00mtrue\x1b[90m\x1b[39;49;00m\r\n\r\n'
-        'Error\r\n',
+        f'\x1b[39;49;00mtrue\x1b[90m\x1b[39;49;00m{linesep}{linesep}'
+        f'Error{linesep}',
     )
